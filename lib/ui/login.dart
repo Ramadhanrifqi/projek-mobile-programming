@@ -68,12 +68,41 @@ class LoginState extends State<Login> {
   }
 
   Widget _tombolLogin() {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      child: ElevatedButton(
-        child: Text("Login"),
-        onPressed: () {},
-      ),
-    );
-  }
+  return Container(
+    width: MediaQuery.of(context).size.width,
+    child: ElevatedButton(
+      child: Text("Login"),
+      onPressed: () async {
+        String username = _usernameCtrl.text;
+        String password = _passwordCtrl.text;
+        await LoginService().login(username, password).then((value) {
+          if (value == true) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Beranda()),
+            );
+          } else {
+            AlertDialog alertDialog = AlertDialog(
+              content: const Text("Username atau Password Tidak Valid"),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("OK"),
+                  style: ElevatedButton.styleFrom(primary: Colors.green),
+                )
+              ],
+            );
+            showDialog(
+              context: context,
+              builder: (context) => alertDialog,
+            );
+          }
+        });
+      },
+    ),
+  );
+}
+
 }

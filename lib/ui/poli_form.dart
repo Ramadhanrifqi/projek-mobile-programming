@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:klinik/model/poli.dart';
-import 'package:klinik/ui/poli_detail.dart';
+import '../model/poli.dart';
+import '../service/poli_service.dart';
+import 'poli_detail.dart';
 
 class PoliForm extends StatefulWidget {
-  const PoliForm({super.key});
+  const PoliForm({Key? key}) : super(key: key);
 
   @override
-  PoliFormState createState() => PoliFormState();
+  _PoliFormState createState() => _PoliFormState();
 }
 
-class PoliFormState extends State<PoliForm> {
+class _PoliFormState extends State<PoliForm> {
   final _formKey = GlobalKey<FormState>();
   final _namaPoliCtrl = TextEditingController();
 
@@ -23,7 +24,7 @@ class PoliFormState extends State<PoliForm> {
           child: Column(
             children: [
               _fieldNamaPoli(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _tombolSimpan(),
             ],
           ),
@@ -32,23 +33,25 @@ class PoliFormState extends State<PoliForm> {
     );
   }
 
-  _fieldNamaPoli() {
+  Widget _fieldNamaPoli() {
     return TextField(
       decoration: const InputDecoration(labelText: "Nama Poli"),
       controller: _namaPoliCtrl,
     );
   }
 
-  _tombolSimpan() {
+  Widget _tombolSimpan() {
     return ElevatedButton(
-      onPressed: () {
+      onPressed: () async {
         Poli poli = Poli(namaPoli: _namaPoliCtrl.text);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PoliDetail(poli: poli),
-          ),
-        );
+        await PoliService().simpan(poli).then((value) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PoliDetail(poli: value),
+            ),
+          );
+        });
       },
       child: const Text("Simpan"),
     );
