@@ -18,7 +18,7 @@ class PoliUpdateFormState extends State<PoliUpdateForm> {
   void initState() {
     super.initState();
     setState(() {
-      _namaPoliCtrl.text = widget.poli.namaPoli;
+      _namaPoliCtrl.text = widget .poli.namaPoli;
     });
   }
 
