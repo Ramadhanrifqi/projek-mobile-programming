@@ -61,7 +61,7 @@ class _PoliDetailState extends State<PoliDetail> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => PoliUpdateForm(poli: snapshot.data),
+              builder: (context) => PoliUpdate(poli: snapshot.data),
             ),
           );
         },
