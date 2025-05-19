@@ -9,16 +9,18 @@ class PoliForm extends StatefulWidget {
   @override
   _PoliFormState createState() => _PoliFormState();
 }
-bool _isLoading = false;
+
 class _PoliFormState extends State<PoliForm> {
   final _formKey = GlobalKey<FormState>();
   final _namaPoliCtrl = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Tambah Poli")),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
@@ -34,42 +36,65 @@ class _PoliFormState extends State<PoliForm> {
   }
 
   Widget _fieldNamaPoli() {
-    return TextField(
-      decoration: const InputDecoration(labelText: "Nama Poli"),
+    return TextFormField(
+      decoration: const InputDecoration(
+        labelText: "Nama Poli",
+        border: OutlineInputBorder(),
+      ),
       controller: _namaPoliCtrl,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Nama Poli tidak boleh kosong';
+        }
+        return null;
+      },
     );
   }
 
   Widget _tombolSimpan() {
-  return _isLoading
-      ? CircularProgressIndicator()
-      : ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              setState(() {
-                _isLoading = true;
-              });
-              try {
-                Poli poli = Poli(namaPoli: _namaPoliCtrl.text);
-                final value = await PoliService().simpan(poli);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PoliDetail(poli: value),
-                  ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Gagal menyimpan: $e')),
-                );
-              } finally {
-                setState(() {
-                  _isLoading = false;
-                });
-              }
-            }
-          },
-          child: const Text("Simpan"),
+    return _isLoading
+        ? const CircularProgressIndicator()
+        : ElevatedButton(
+            onPressed: _simpanPoli,
+            child: const Text("Simpan"),
+          );
+  }
+
+  Future<void> _simpanPoli() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        Poli poli = Poli(namaPoli: _namaPoliCtrl.text);
+        final value = await PoliService().simpan(poli);
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PoliDetail(poli: value),
+          ),
         );
-}
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan: $e')),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _namaPoliCtrl.dispose();
+    super.dispose();
+  }
 }
