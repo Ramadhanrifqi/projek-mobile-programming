@@ -7,7 +7,9 @@ import '../model/poli.dart';
 class PoliDetail extends StatefulWidget {
   final Poli poli;
 
-  const PoliDetail({Key? key, required this.poli}) : super(key: key);
+  const PoliDetail({super.key, required this.poli});
+  @override
+  // ignore: library_private_types_in_public_api
   _PoliDetailState createState() => _PoliDetailState();
 }
 
@@ -65,7 +67,7 @@ class _PoliDetailState extends State<PoliDetail> {
             ),
           );
         },
-        style: ElevatedButton.styleFrom(primary: Colors.green),
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
         child: const Text("Ubah"),
       ),
     );
@@ -82,8 +84,10 @@ class _PoliDetailState extends State<PoliDetail> {
               builder: (context, AsyncSnapshot snapshot) => ElevatedButton(
                 onPressed: () async {
                   await PoliService().hapus(snapshot.data).then((value) {
+                    // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                     Navigator.pushReplacement(
+                      // ignore: use_build_context_synchronously
                       context,
                       MaterialPageRoute(
                         builder: (context) => PoliPage(),
@@ -91,22 +95,22 @@ class _PoliDetailState extends State<PoliDetail> {
                     );
                   });
                 },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text("YA"),
-                style: ElevatedButton.styleFrom(primary: Colors.red),
               ),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
               },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               child: const Text("Tidak"),
-              style: ElevatedButton.styleFrom(primary: Colors.green),
             )
           ],
         );
         showDialog(context: context, builder: (context) => alertDialog);
       },
-      style: ElevatedButton.styleFrom(primary: Colors.red),
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
       child: const Text("Hapus"),
     );
   }

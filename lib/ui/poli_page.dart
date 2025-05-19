@@ -6,57 +6,58 @@ import 'poli_item.dart';
 import '../widget/sidebar.dart';
 
 class PoliPage extends StatefulWidget {
-  const PoliPage({Key? key}) : super(key: key);
+  const PoliPage({super.key});
 
   @override
   _PoliPageState createState() => _PoliPageState();
 }
 
 class _PoliPageState extends State<PoliPage> {
-  Stream<List<Poli>> getList() async* {
-    List<Poli> data = await PoliService().listData();
-    yield data;
+  /// Mengambil daftar Poli dari service sebagai Future
+  Future<List<Poli>> getList() async {
+    return await PoliService().listData();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Sidebar(),
+      drawer: const Sidebar(),
       appBar: AppBar(
-        title: const Text("Data Poli"),
+        title: const Text('Data Poli'),
         actions: [
-          GestureDetector(
-            child: const Icon(Icons.add),
-            onTap: () {
-              Navigator.push(
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () async {
+              // Navigate ke form, tunggu hingga kembali, lalu refresh data
+              await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => PoliForm()),
+                MaterialPageRoute(builder: (context) => const PoliForm()),
               );
+              setState(() {});
             },
           ),
         ],
       ),
-      body: StreamBuilder(
-        stream: getList(),
-        builder: (context, AsyncSnapshot snapshot) {
+      body: FutureBuilder<List<Poli>>(
+        future: getList(),
+        builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Text(snapshot.error.toString());
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
           }
 
-          if (!snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
-            return const Text("Data kosong");
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Data kosong'));
           }
 
+          final polis = snapshot.data!;
           return ListView.builder(
-            itemCount: snapshot.data.length,
+            itemCount: polis.length,
             itemBuilder: (context, index) {
-              return PoliItem(poli: snapshot.data[index]);
+              return PoliItem(poli: polis[index]);
             },
           );
         },

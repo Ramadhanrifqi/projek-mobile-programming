@@ -9,7 +9,7 @@ class PoliForm extends StatefulWidget {
   @override
   _PoliFormState createState() => _PoliFormState();
 }
-
+bool _isLoading = false;
 class _PoliFormState extends State<PoliForm> {
   final _formKey = GlobalKey<FormState>();
   final _namaPoliCtrl = TextEditingController();
@@ -41,19 +41,35 @@ class _PoliFormState extends State<PoliForm> {
   }
 
   Widget _tombolSimpan() {
-    return ElevatedButton(
-      onPressed: () async {
-        Poli poli = Poli(namaPoli: _namaPoliCtrl.text);
-        await PoliService().simpan(poli).then((value) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PoliDetail(poli: value),
-            ),
-          );
-        });
-      },
-      child: const Text("Simpan"),
-    );
-  }
+  return _isLoading
+      ? CircularProgressIndicator()
+      : ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              setState(() {
+                _isLoading = true;
+              });
+              try {
+                Poli poli = Poli(namaPoli: _namaPoliCtrl.text);
+                final value = await PoliService().simpan(poli);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PoliDetail(poli: value),
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Gagal menyimpan: $e')),
+                );
+              } finally {
+                setState(() {
+                  _isLoading = false;
+                });
+              }
+            }
+          },
+          child: const Text("Simpan"),
+        );
+}
 }

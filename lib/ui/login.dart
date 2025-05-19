@@ -70,7 +70,7 @@ class LoginState extends State<Login> {
   }
 
   Widget _tombolLogin() {
-  return Container(
+  return SizedBox(
     width: MediaQuery.of(context).size.width,
     child: ElevatedButton(
       child: Text("Login"),
@@ -80,6 +80,7 @@ class LoginState extends State<Login> {
         await LoginService().login(username, password).then((value) {
           if (value == true) {
             Navigator.pushReplacement(
+              // ignore: use_build_context_synchronously
               context,
               MaterialPageRoute(builder: (context) => Beranda()),
             );
@@ -91,12 +92,13 @@ class LoginState extends State<Login> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   child: const Text("OK"),
-                  style: ElevatedButton.styleFrom(primary: Colors.green),
                 )
               ],
             );
             showDialog(
+              // ignore: use_build_context_synchronously
               context: context,
               builder: (context) => alertDialog,
             );

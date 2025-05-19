@@ -3,13 +3,24 @@ import '/helpers/user_info.dart';
 import '/ui/beranda.dart';
 import '/ui/login.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   var token = await UserInfo().getToken();
   print(token);
-  runApp(MaterialApp(
-    title: "Klinik APP",
-    debugShowCheckedModeBanner: false,
-    home: token == null ? Login() : Beranda(),
-  ));
+  runApp(MyApp(token: token));
+}
+
+class MyApp extends StatelessWidget {
+  final String? token;
+
+  const MyApp({super.key, this.token});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: "Klinik APP",
+      debugShowCheckedModeBanner: false,
+      home: token == null ? Login() : Beranda(),
+    );
+  }
 }
