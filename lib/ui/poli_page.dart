@@ -19,6 +19,19 @@ class _PoliPageState extends State<PoliPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && args is String) {
+      Future.microtask(() {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(args)),
+        );
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: const Sidebar(),

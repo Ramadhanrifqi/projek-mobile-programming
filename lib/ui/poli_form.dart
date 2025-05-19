@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/poli.dart';
 import '../service/poli_service.dart';
-import 'poli_detail.dart';
+import 'poli_page.dart';
 
 class PoliForm extends StatefulWidget {
   const PoliForm({Key? key}) : super(key: key);
@@ -71,12 +71,16 @@ class _PoliFormState extends State<PoliForm> {
         final value = await PoliService().simpan(poli);
 
         if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PoliDetail(poli: value),
+       Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const PoliPage(),
+          settings: RouteSettings(
+            arguments: 'Data berhasil disimpan',
           ),
-        );
+        ),
+      );
+
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

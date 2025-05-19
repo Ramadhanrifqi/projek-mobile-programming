@@ -43,7 +43,7 @@ class Sidebar extends StatelessWidget {
           ),
           ListTile(
             leading: Icon(Icons.account_box_sharp),
-            title: Text("Pasien"),
+            title: Text("Data Shif"),
             onTap: () {},
           ),
           ListTile(
