@@ -28,7 +28,7 @@ class Sidebar extends StatelessWidget {
           ),
           ListTile(
             leading: Icon(Icons.accessible),
-            title: Text("Poli"),
+            title: Text("Pengajuan cuti"),
             onTap: () {
               Navigator.push(
                 context,
@@ -38,7 +38,7 @@ class Sidebar extends StatelessWidget {
           ),
           ListTile(
             leading: Icon(Icons.people),
-            title: Text("Pegawai"),
+            title: Text("Slip Gaji"),
             onTap: () {},
           ),
           ListTile(
