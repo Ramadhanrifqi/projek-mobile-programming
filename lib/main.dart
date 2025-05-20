@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Klinik APP",
+      title: "Klinik ",
       debugShowCheckedModeBanner: false,
       home: token == null ? Login() : Beranda(),
     );

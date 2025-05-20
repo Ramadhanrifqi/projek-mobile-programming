@@ -15,11 +15,17 @@ class CutiUpdate extends StatefulWidget {
 class _CutiUpdateState extends State<CutiUpdate> {
   final _formKey = GlobalKey<FormState>();
   final _ajukanCutiCtrl = TextEditingController();
+  final _tanggalMulaiCtrl = TextEditingController();
+  final _tanggalSelesaiCtrl = TextEditingController();
+  final _alasanCtrl = TextEditingController();
 
   Future<Cuti> getData() async {
     Cuti data = await CutiService().getById(widget.cuti.id.toString());
     setState(() {
       _ajukanCutiCtrl.text = data.ajukanCuti;
+      _tanggalMulaiCtrl.text = data.tanggalMulai ?? '';
+      _tanggalSelesaiCtrl.text = data.tanggalSelesai ?? '';
+      _alasanCtrl.text = data.alasan ?? '';
     });
     return data;
   }
@@ -35,27 +41,61 @@ class _CutiUpdateState extends State<CutiUpdate> {
     return Scaffold(
       appBar: AppBar(title: const Text("Ubah Cuti")),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
-            children: [_fieldNama(), SizedBox(height: 20), _tombolSimpan()],
+            children: [
+              _fieldNama(),
+              _fieldTanggalMulai(),
+              _fieldTanggalSelesai(),
+              _fieldAlasan(),
+              const SizedBox(height: 20),
+              _tombolSimpan(),
+            ],
           ),
         ),
       ),
     );
   }
 
-  _fieldNama() {
-    return TextField(
-      decoration: const InputDecoration(labelText: "Nama Cuti"),
+  Widget _fieldNama() {
+    return TextFormField(
       controller: _ajukanCutiCtrl,
+      decoration: const InputDecoration(labelText: "Nama Cuti"),
     );
   }
 
-  _tombolSimpan() {
+  Widget _fieldTanggalMulai() {
+    return TextFormField(
+      controller: _tanggalMulaiCtrl,
+      decoration: const InputDecoration(labelText: "Tanggal Mulai (yyyy-mm-dd)"),
+    );
+  }
+
+  Widget _fieldTanggalSelesai() {
+    return TextFormField(
+      controller: _tanggalSelesaiCtrl,
+      decoration: const InputDecoration(labelText: "Tanggal Selesai (yyyy-mm-dd)"),
+    );
+  }
+
+  Widget _fieldAlasan() {
+    return TextFormField(
+      controller: _alasanCtrl,
+      decoration: const InputDecoration(labelText: "Alasan"),
+    );
+  }
+
+  Widget _tombolSimpan() {
     return ElevatedButton(
       onPressed: () async {
-        Cuti cuti = new Cuti(ajukanCuti: _ajukanCutiCtrl.text);
+        Cuti cuti = Cuti(
+          ajukanCuti: _ajukanCutiCtrl.text,
+          tanggalMulai: _tanggalMulaiCtrl.text,
+          tanggalSelesai: _tanggalSelesaiCtrl.text,
+          alasan: _alasanCtrl.text,
+        );
         String id = widget.cuti.id.toString();
         await CutiService().ubah(cuti, id).then((value) {
           Navigator.pop(context);
