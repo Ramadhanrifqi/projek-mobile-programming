@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
-import '../model/poli.dart';
-import '../service/poli_service.dart';
-import 'poli_page.dart';
+import '../model/cuti.dart';
+import '../service/cuti_service.dart';
+import 'cuti_page.dart';
 
-class PoliForm extends StatefulWidget {
-  const PoliForm({Key? key}) : super(key: key);
+class CutiForm extends StatefulWidget {
+  const CutiForm({Key? key}) : super(key: key);
 
   @override
-  _PoliFormState createState() => _PoliFormState();
+  _CutiFormState createState() => _CutiFormState();
 }
 
-class _PoliFormState extends State<PoliForm> {
+class _CutiFormState extends State<CutiForm> {
   final _formKey = GlobalKey<FormState>();
-  final _namaPoliCtrl = TextEditingController();
+  final _ajukanCutiCtrl = TextEditingController();
   bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Tambah Poli")),
+      appBar: AppBar(title: const Text("Tambah Cuti")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              _fieldNamaPoli(),
+              _fieldNama(),
               const SizedBox(height: 20),
               _tombolSimpan(),
             ],
@@ -35,16 +35,16 @@ class _PoliFormState extends State<PoliForm> {
     );
   }
 
-  Widget _fieldNamaPoli() {
+  Widget _fieldNama() {
     return TextFormField(
       decoration: const InputDecoration(
-        labelText: "Nama Poli",
+        labelText: "Nama Cuti",
         border: OutlineInputBorder(),
       ),
-      controller: _namaPoliCtrl,
+      controller: _ajukanCutiCtrl,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Nama Poli tidak boleh kosong';
+          return 'Nama Cuti tidak boleh kosong';
         }
         return null;
       },
@@ -55,26 +55,26 @@ class _PoliFormState extends State<PoliForm> {
     return _isLoading
         ? const CircularProgressIndicator()
         : ElevatedButton(
-            onPressed: _simpanPoli,
+            onPressed: _simpanCuti,
             child: const Text("Simpan"),
           );
   }
 
-  Future<void> _simpanPoli() async {
+  Future<void> _simpanCuti() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
       try {
-        Poli poli = Poli(namaPoli: _namaPoliCtrl.text);
-        final value = await PoliService().simpan(poli);
+        Cuti cuti = Cuti(ajukanCuti: _ajukanCutiCtrl.text);
+        final value = await CutiService().simpan(cuti);
 
         if (!mounted) return;
        Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const PoliPage(),
+          builder: (context) => const CutiPage(),
           settings: RouteSettings(
             arguments: 'Data berhasil disimpan',
           ),
@@ -98,7 +98,7 @@ class _PoliFormState extends State<PoliForm> {
 
   @override
   void dispose() {
-    _namaPoliCtrl.dispose();
+    _ajukanCutiCtrl.dispose();
     super.dispose();
   }
 }

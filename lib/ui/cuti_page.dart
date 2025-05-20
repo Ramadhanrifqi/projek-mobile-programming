@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import '../model/poli.dart';
-import '../service/poli_service.dart';
-import 'poli_form.dart';
+import '../model/cuti.dart';
+import '../service/cuti_service.dart';
+import 'cuti_form.dart';
 import 'poli_item.dart';
 import '../widget/sidebar.dart';
 
-class PoliPage extends StatefulWidget {
-  const PoliPage({super.key});
+class CutiPage extends StatefulWidget {
+  const CutiPage({super.key});
 
   @override
-  _PoliPageState createState() => _PoliPageState();
+  _CutiPageState createState() => _CutiPageState();
 }
 
-class _PoliPageState extends State<PoliPage> {
-  /// Mengambil daftar Poli dari service sebagai Future
-  Future<List<Poli>> getList() async {
-    return await PoliService().listData();
+class _CutiPageState extends State<CutiPage> {
+  /// Mengambil daftar Cuti dari service sebagai Future
+  Future<List<Cuti>> getList() async {
+    return await CutiService().listData();
   }
 
   @override
@@ -36,7 +36,7 @@ class _PoliPageState extends State<PoliPage> {
     return Scaffold(
       drawer: const Sidebar(),
       appBar: AppBar(
-        title: const Text('Data Poli'),
+        title: const Text('Data Pegajuan Cuti'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -44,14 +44,14 @@ class _PoliPageState extends State<PoliPage> {
               // Navigate ke form, tunggu hingga kembali, lalu refresh data
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const PoliForm()),
+                MaterialPageRoute(builder: (context) => const CutiForm()),
               );
               setState(() {});
             },
           ),
         ],
       ),
-      body: FutureBuilder<List<Poli>>(
+      body: FutureBuilder<List<Cuti>>(
         future: getList(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -70,7 +70,7 @@ class _PoliPageState extends State<PoliPage> {
           return ListView.builder(
             itemCount: polis.length,
             itemBuilder: (context, index) {
-              return PoliItem(poli: polis[index]);
+              return PoliItem(cuti: polis[index]);
             },
           );
         },

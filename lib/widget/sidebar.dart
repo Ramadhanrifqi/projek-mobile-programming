@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../ui/beranda.dart';
 import '../ui/login.dart';
-import '../ui/poli_page.dart';
+import '../ui/cuti_page.dart';
 
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
@@ -32,7 +32,7 @@ class Sidebar extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => PoliPage()),
+                MaterialPageRoute(builder: (context) => CutiPage()),
               );
             },
           ),

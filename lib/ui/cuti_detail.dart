@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import '../service/poli_service.dart';
-import 'poli_page.dart';
-import 'poli_update_form.dart';
-import '../model/poli.dart';
+import '../service/cuti_service.dart';
+import 'cuti_page.dart';
+import 'cuti_update_form.dart';
+import '../model/cuti.dart';
 
-class PoliDetail extends StatefulWidget {
-  final Poli poli;
+class CutiDetail extends StatefulWidget {
+  final Cuti cuti;
 
-  const PoliDetail({super.key, required this.poli});
+  const CutiDetail({super.key, required this.cuti});
   @override
   // ignore: library_private_types_in_public_api
-  _PoliDetailState createState() => _PoliDetailState();
+  _CutiDetaileState createState() => _CutiDetaileState();
 }
 
-class _PoliDetailState extends State<PoliDetail> {
-  Stream<Poli> getData() async* {
-    Poli data = await PoliService().getById(widget.poli.id.toString());
+class _CutiDetaileState extends State<CutiDetail> {
+  Stream<Cuti> getData() async* {
+    Cuti data = await CutiService().getById(widget.cuti.id.toString());
     yield data;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Detail Poli")),
+      appBar: AppBar(title: const Text("Nama")),
       body: StreamBuilder(
         stream: getData(),
         builder: (context, AsyncSnapshot snapshot) {
@@ -40,7 +40,7 @@ class _PoliDetailState extends State<PoliDetail> {
             children: [
               const SizedBox(height: 20),
               Text(
-                "Nama Poli : ${snapshot.data.namaPoli}",
+                "Nama Karyawan : ${snapshot.data.ajukanCuti}",
                 style: const TextStyle(fontSize: 20),
               ),
               const SizedBox(height: 20),
@@ -63,7 +63,7 @@ class _PoliDetailState extends State<PoliDetail> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => PoliUpdate(poli: snapshot.data),
+              builder: (context) => CutiUpdate(cuti: snapshot.data),
             ),
           );
         },
@@ -83,14 +83,14 @@ class _PoliDetailState extends State<PoliDetail> {
               stream: getData(),
               builder: (context, AsyncSnapshot snapshot) => ElevatedButton(
                 onPressed: () async {
-                  await PoliService().hapus(snapshot.data).then((value) {
+                  await CutiService().hapus(snapshot.data).then((value) {
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                     Navigator.pushReplacement(
                       // ignore: use_build_context_synchronously
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PoliPage(),
+                        builder: (context) => CutiPage(),
                       ),
                     );
                   });
