@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
-import '/helpers/user_info.dart';
-import '/ui/beranda.dart';
-import '/ui/login.dart';
+import 'ui/login.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  var token = await UserInfo().getToken();
-  print(token);
-  runApp(MyApp(token: token));
+void main() {
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final String? token;
-
-  const MyApp({super.key, this.token});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Klinik ",
+      title: 'PT Naga Hitam',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const LoginPage(),
       debugShowCheckedModeBanner: false,
-      home: token == null ? Login() : Beranda(),
     );
   }
 }

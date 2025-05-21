@@ -1,112 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:klinik/service/login_service.dart';
-import 'package:klinik/ui/beranda.dart';
+import '../service/login_service.dart';
+import '../model/user.dart';
+import '../helpers/user_info.dart';
+import 'beranda.dart';
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  LoginState createState() => LoginState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class LoginState extends State<Login> {
-  final _formKey = GlobalKey<FormState>();
+class _LoginPageState extends State<LoginPage> {
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  void _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      final user = await LoginService()
+          .login(_usernameCtrl.text, _passwordCtrl.text);
+      if (user != null) {
+        UserInfo.setUser(user);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Beranda()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login gagal!')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: SafeArea(
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Login Admin",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
-                ),
-                SizedBox(height: 50),
-                Center(
-                  child: Form(
-                    key: _formKey,
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width / 1.3,
-                      child: Column(
-                        children: [
-                          _usernameTextField(),
-                          SizedBox(height: 20),
-                          _passwordTextField(),
-                          SizedBox(height: 40),
-                          _tombolLogin(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+      appBar: AppBar(title: const Text("Login")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _usernameCtrl,
+                decoration: const InputDecoration(labelText: 'Username'),
+                validator: (value) => value!.isEmpty ? 'Wajib diisi' : null,
+              ),
+              TextFormField(
+                controller: _passwordCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
+                validator: (value) => value!.isEmpty ? 'Wajib diisi' : null,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _handleLogin,
+                child: const Text('Login'),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-
-  Widget _usernameTextField() {
-    return TextFormField(
-      decoration: InputDecoration(labelText: "Username"),
-      controller: _usernameCtrl,
-    );
-  }
-
-  Widget _passwordTextField() {
-    return TextFormField(
-      decoration: InputDecoration(labelText: "Password"),
-      obscureText: true,
-      controller: _passwordCtrl,
-    );
-  }
-
-  Widget _tombolLogin() {
-  return SizedBox(
-    width: MediaQuery.of(context).size.width,
-    child: ElevatedButton(
-      child: Text("Login"),
-      onPressed: () async {
-        String username = _usernameCtrl.text;
-        String password = _passwordCtrl.text;
-        await LoginService().login(username, password).then((value) {
-          if (value == true) {
-            Navigator.pushReplacement(
-              // ignore: use_build_context_synchronously
-              context,
-              MaterialPageRoute(builder: (context) => Beranda()),
-            );
-          } else {
-            AlertDialog alertDialog = AlertDialog(
-              content: const Text("Username atau Password Tidak Valid"),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text("OK"),
-                )
-              ],
-            );
-            showDialog(
-              // ignore: use_build_context_synchronously
-              context: context,
-              builder: (context) => alertDialog,
-            );
-          }
-        });
-      },
-    ),
-  );
-}
-
 }

@@ -77,11 +77,14 @@ class _CutiFormState extends State<CutiForm> {
       onPressed: () async {
         if (_formKey.currentState!.validate()) {
           Cuti cuti = Cuti(
-            ajukanCuti: _namaCtrl.text,
-            tanggalMulai: _tanggalMulaiCtrl.text,
-            tanggalSelesai: _tanggalSelesaiCtrl.text,
-            alasan: _alasanCtrl.text,
-          );
+  ajukanCuti: _namaCtrl.text,
+  tanggalMulai: _tanggalMulaiCtrl.text,
+  tanggalSelesai: _tanggalSelesaiCtrl.text,
+  alasan: _alasanCtrl.text,
+  status: 'Pending', // atau sesuai logika aplikasi
+  userId: '123', // ambil dari user yang sedang login
+);
+
 
           await CutiService().simpan(cuti).then((value) {
             ScaffoldMessenger.of(context).showSnackBar(

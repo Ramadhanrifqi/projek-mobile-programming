@@ -31,9 +31,11 @@ class CutiService {
     return result;
   }
 
-  Future<Cuti> hapus(Cuti cuti) async {
-    final Response response = await ApiClient().delete('cuti/${cuti.id}');
-    Cuti result = Cuti.fromJson(response.data);
-    return result;
+  Future<void> hapus(String id) async {
+  final Response response = await ApiClient().delete('cuti/$id');
+  if (response.statusCode != 200) {
+    throw Exception('Gagal menghapus data');
   }
+}
+
 }

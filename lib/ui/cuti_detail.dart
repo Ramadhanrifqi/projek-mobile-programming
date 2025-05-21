@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/cuti.dart';
+import '../service/cuti_service.dart';
+import '../global.dart';
 import 'cuti_update_form.dart';
 
 class CutiDetail extends StatelessWidget {
@@ -12,25 +14,41 @@ class CutiDetail extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Detail Cuti")),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Nama Cuti: ${cuti.ajukanCuti}", style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 10),
-            Text("Tanggal Mulai: ${cuti.tanggalMulai ?? '-'}"),
-            Text("Tanggal Selesai: ${cuti.tanggalSelesai ?? '-'}"),
-            Text("Alasan: ${cuti.alasan ?? '-'}"),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CutiUpdate(cuti: cuti)),
-                );
-              },
-              child: const Text("Edit"),
-            ),
+            Text("Nama: ${cuti.ajukanCuti}", style: const TextStyle(fontSize: 18)),
+            Text("Mulai: ${cuti.tanggalMulai}"),
+            Text("Selesai: ${cuti.tanggalSelesai}"),
+            Text("Alasan: ${cuti.alasan}"),
+            Text("Status: ${cuti.status ?? 'pending'}"),
+            const SizedBox(height: 16),
+            if (currentRole == "admin" && cuti.status == "pending") ...[
+              ElevatedButton(
+                onPressed: () async {
+                  Cuti updatedCuti = cuti;
+                  updatedCuti.status = "approved";
+                  await CutiService().ubah(updatedCuti, updatedCuti.id!);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Cuti disetujui")),
+                  );
+                  Navigator.pop(context);
+                },
+                child: const Text("Setujui Cuti"),
+              )
+            ],
+            if (currentRole == "admin") ...[
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => CutiUpdateFormPage(cuti: cuti)),
+                  );
+                },
+                child: const Text("Edit"),
+              )
+            ]
           ],
         ),
       ),

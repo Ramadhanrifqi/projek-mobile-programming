@@ -1,14 +1,26 @@
-import '../helpers/user_info.dart';
+import 'package:dio/dio.dart';
+import '../model/user.dart';
 
 class LoginService {
-  Future<bool> login(String username, String password) async {
-    bool isLogin = false;
-    if (username == 'admin' && password == 'admin') {
-      await UserInfo().setToken("admin");
-      await UserInfo().setUserID("1");
-      await UserInfo().setUsername("admin");
-      isLogin = true;
+  final Dio _dio = Dio();
+  final String baseUrl = 'https://681b025517018fe5057980fa.mockapi.io/users'; // Ganti URL sesuai mockapi kamu
+
+  Future<User?> login(String username, String password) async {
+    try {
+      final response = await _dio.get(baseUrl, queryParameters: {
+        'username': username,
+        'password': password,
+      });
+
+      if (response.data is List && response.data.isNotEmpty) {
+        final userJson = response.data[0];
+        return User.fromJson(userJson);
+      } else {
+        return null; // Login gagal
+      }
+    } catch (e) {
+      print("Login error: $e");
+      return null;
     }
-    return isLogin;
   }
 }

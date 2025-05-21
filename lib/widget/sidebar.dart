@@ -52,7 +52,7 @@ class Sidebar extends StatelessWidget {
             onTap: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => Login()),
+                MaterialPageRoute(builder: (context) => LoginPage()),
                 (Route<dynamic> route) => false,
               );
             },
