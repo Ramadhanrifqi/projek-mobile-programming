@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import '../ui/beranda.dart';
 import '../ui/login.dart';
 import '../ui/cuti_page.dart';
-
+import '../helpers/user_info.dart'; // Tambahkan ini
+import '../ui/slip_gaji_page.dart';
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = UserInfo.user; // Ambil user dari UserInfo
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text("Admin"),
-            accountEmail: Text("admin@admin.com"),
+            accountName: Text(user?.username ?? "Tidak diketahui"),
+            accountEmail: Text(user?.username ?? "-"),
           ),
           ListTile(
             leading: Icon(Icons.home),
@@ -37,10 +40,16 @@ class Sidebar extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: Icon(Icons.people),
-            title: Text("Slip Gaji"),
-            onTap: () {},
-          ),
+              leading: Icon(Icons.people),
+              title: Text("Slip Gaji"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SlipGajiPage()),
+                );
+              },
+            ),
+
           ListTile(
             leading: Icon(Icons.account_box_sharp),
             title: Text("Data Shif"),
