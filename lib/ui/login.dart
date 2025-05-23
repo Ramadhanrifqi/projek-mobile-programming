@@ -27,7 +27,9 @@ class _LoginPageState extends State<LoginPage> {
         UserInfo.setUser(user);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const Beranda()),
+          MaterialPageRoute(
+            builder: (context) => Beranda(username: user.username),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                         SizedBox(
                           height: 100,
                           child: Image.asset(
-                            'assets/images/images/Logo.naga.png', 
+                            'assets/images/images/Logo.naga.png',
                             fit: BoxFit.contain,
                           ),
                         ),

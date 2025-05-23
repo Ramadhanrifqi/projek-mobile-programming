@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../widget/sidebar.dart';
 class SlipGajiPage extends StatelessWidget {
   final String namaKaryawan;
   final double gaji;
@@ -13,15 +13,13 @@ class SlipGajiPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const Sidebar(),
       backgroundColor: const Color(0xFFF5F5F5), // Warna latar belakang lembut
       appBar: AppBar(
         title: const Text('Slip Gaji PT. Naga Hytam'),
         centerTitle: true,
         backgroundColor: Colors.indigo.shade600,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+       
       ),
       body: Center(
         child: Container(

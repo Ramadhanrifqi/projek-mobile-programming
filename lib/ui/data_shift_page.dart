@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../widget/sidebar.dart';
 class DataShiftPage extends StatelessWidget {
   const DataShiftPage({Key? key}) : super(key: key);
 
@@ -32,6 +32,7 @@ class DataShiftPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const Sidebar(),
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('Jadwal Shift Mingguan'),

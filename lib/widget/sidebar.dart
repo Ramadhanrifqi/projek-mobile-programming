@@ -25,6 +25,7 @@ class Sidebar extends StatelessWidget {
         child: Column(
           children: [
             UserAccountsDrawerHeader(
+              margin: EdgeInsets.zero,
               decoration: const BoxDecoration(
                 color: Colors.transparent,
               ),
@@ -32,7 +33,7 @@ class Sidebar extends StatelessWidget {
                 user?.username ?? "Tidak diketahui",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              accountEmail: Text(user?.username ?? "-"),
+              accountEmail: Text(user?.username ?? ""),
               currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, size: 40, color: Colors.indigo),
@@ -42,7 +43,7 @@ class Sidebar extends StatelessWidget {
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(0)),
                 ),
                 child: Column(
                   children: [
@@ -54,7 +55,8 @@ class Sidebar extends StatelessWidget {
                             context,
                             icon: Icons.home,
                             title: "Beranda",
-                            destination: Beranda(),
+                            destination: Beranda(username: '',),
+                            
                           ),
                           _buildListTile(
                             context,
@@ -68,14 +70,12 @@ class Sidebar extends StatelessWidget {
                             title: "Slip Gaji",
                             destination: SlipGajiPage(),
                           ),
-                          _buildDivider(),
                           _buildListTile(
                             context,
                             icon: Icons.calendar_month,
                             title: "Data Shift",
                             destination: DataShiftPage(),
                           ),
-                          _buildDivider(),
                           _buildListTile(
                             context,
                             icon: Icons.logout_rounded,
