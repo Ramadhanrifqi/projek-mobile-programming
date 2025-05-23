@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
 class DataShiftPage extends StatelessWidget {
-  final List<String> days = [
+  const DataShiftPage({Key? key}) : super(key: key);
+
+  final List<String> days = const [
     'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'
   ];
 
-  final List<String> employees = [
+  final List<String> employees = const [
     'Karyawan A', 'Karyawan B', 'Karyawan C', 'Karyawan D',
   ];
 
-  final List<List<String>> shiftData = [
+  final List<List<String>> shiftData = const [
     ['Pagi', 'Pagi', 'Malam', 'Malam'],
     ['Pagi', 'Pagi', 'Malam', 'Malam'],
     ['Pagi', 'Malam', 'Pagi', 'Malam'],
@@ -30,80 +32,67 @@ class DataShiftPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.indigo[50],
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
+        title: const Text('Jadwal Shift Mingguan'),
         backgroundColor: Colors.indigo,
-        title: const Text('Data Shift'),
+        centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Jadwal Shift Mingguan",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.indigo,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              "Lihat pembagian shift karyawan setiap hari.",
-              style: TextStyle(fontSize: 16, color: Colors.black54),
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columnSpacing: 24,
-                      headingRowColor: MaterialStateProperty.all(Colors.indigo.shade100),
-                      headingTextStyle: const TextStyle(
+        padding: const EdgeInsets.all(16),
+        child: ListView.builder(
+          itemCount: days.length,
+          itemBuilder: (context, i) {
+            return Card(
+              elevation: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      days[i],
+                      style: const TextStyle(
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                         color: Colors.indigo,
                       ),
-                      dataTextStyle: const TextStyle(fontSize: 14),
-                      columns: [
-                        const DataColumn(label: Text('Hari')),
-                        ...employees.map((e) => DataColumn(label: Text(e))),
-                      ],
-                      rows: List.generate(days.length, (i) {
-                        return DataRow(
-                          cells: [
-                            DataCell(Text(days[i])),
-                            ...shiftData[i].map((shift) {
-                              return DataCell(Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: getShiftColor(shift),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  shift,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: getShiftTextColor(shift),
-                                  ),
-                                ),
-                              ));
-                            }).toList(),
-                          ],
-                        );
-                      }),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    ...List.generate(employees.length, (j) {
+                      final shift = shiftData[i][j];
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: getShiftColor(shift),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              employees[j],
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              shift,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: getShiftTextColor(shift),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
