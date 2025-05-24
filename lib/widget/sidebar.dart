@@ -55,7 +55,7 @@ class Sidebar extends StatelessWidget {
                             context,
                             icon: Icons.home,
                             title: "Beranda",
-                            destination: Beranda(username: '',),
+                            destination: Beranda(username: '', role: ''), // Provide appropriate value for 'role'
                             
                           ),
                           _buildListTile(
@@ -144,7 +144,7 @@ class Sidebar extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.indigo.withOpacity(0.1),
+                  color: Colors.indigo.withAlpha((0.1 * 255).toInt()),
                   blurRadius: 4,
                   offset: Offset(0, 2),
                 ),
@@ -172,10 +172,4 @@ class Sidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
-      child: Divider(thickness: 1),
-    );
-  }
 }

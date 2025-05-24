@@ -23,19 +23,24 @@ class _LoginPageState extends State<LoginPage> {
         _passwordCtrl.text,
       );
 
-      if (user != null) {
-        UserInfo.setUser(user);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Beranda(username: user.username),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login gagal!')),
-        );
-      }
+if (user != null) {
+  UserInfo.setUser(user);
+  if (!mounted) return;
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => Beranda(
+        username: user.username,
+        role: user.role,
+      ),
+    ),
+  );
+} else {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Login gagal!')),
+  );
+}
     }
   }
 
