@@ -13,33 +13,16 @@ class Beranda extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       extendBodyBehindAppBar: true,
-appBar: AppBar(
-  title: const Text("Beranda"),
-  backgroundColor: const Color.fromARGB(0, 255, 255, 255),
+      appBar: AppBar(
+  title: const Text(
+    "Beranda",
+    style: TextStyle(color: Colors.white),
+  ),
+  backgroundColor: Colors.transparent,
   elevation: 0,
   centerTitle: true,
   automaticallyImplyLeading: true,
-  actions: [
-    Padding(
-      padding: const EdgeInsets.only(right: 16),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4), // Latar lebih gelap agar teks terlihat
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            role == "User" ? "Operator" : role,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Colors.white, // Teks putih agar kontras dengan latar hitam transparan
-            ),
-          ),
-        ),
-      ),
-    ),
-  ],
+  iconTheme: const IconThemeData(color: Colors.white),
 ),
 
       drawer: const Sidebar(),
@@ -48,7 +31,10 @@ appBar: AppBar(
         height: screenHeight,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF303F9F), Color(0xFF3F51B5)], // Indigo gradient
+            colors: [
+              Color(0xFF192524), 
+              Color(0xFF3C5759), 
+            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -57,7 +43,6 @@ appBar: AppBar(
           child: Column(
             children: [
               const SizedBox(height: 40),
-              // Glass Card Sambutan
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: ClipRRect(
@@ -67,9 +52,9 @@ appBar: AppBar(
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: const Color(0xFFD1EBDB).withOpacity(0.25), // mint soft transparan
                         borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Colors.white.withOpacity(0.15)),
+                        border: Border.all(color: const Color(0xFFEFECE9).withOpacity(0.4)),
                       ),
                       child: Column(
                         children: [
@@ -78,9 +63,9 @@ appBar: AppBar(
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black26,
+                                  color: const Color(0xFF192524).withOpacity(0.3),
                                   blurRadius: 10,
-                                  offset: Offset(0, 6),
+                                  offset: const Offset(0, 6),
                                 ),
                               ],
                             ),
@@ -96,7 +81,7 @@ appBar: AppBar(
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: Color(0xFFEFECE9), // Putih tulang
                               height: 1.5,
                             ),
                           ),
@@ -106,7 +91,7 @@ appBar: AppBar(
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.white70,
+                              color: Color(0xFFD0D5CE), // abu pucat
                               height: 1.4,
                             ),
                           ),
@@ -123,7 +108,7 @@ appBar: AppBar(
                   "© 2025 PT Naga Hytam Sejahtera Abadi. All Rights Reserved.",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: const Color(0xFFD0D5CE).withOpacity(0.7),
                     fontSize: 12,
                   ),
                 ),

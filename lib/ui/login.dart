@@ -23,141 +23,159 @@ class _LoginPageState extends State<LoginPage> {
         _passwordCtrl.text,
       );
 
-if (user != null) {
-  UserInfo.setUser(user);
-  if (!mounted) return;
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (context) => Beranda(
-        username: user.username,
-        role: user.role,
-      ),
-    ),
-  );
-} else {
-  if (!mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Login gagal!')),
-  );
-}
+      if (user != null) {
+        UserInfo.setUser(user);
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Beranda(
+              username: user.username,
+              role: user.role,
+            ),
+          ),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login gagal!')),
+        );
+      }
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFF2F2F2), Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF3C5759), 
+            Color(0xFF192524),
+          ],
         ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Card(
+              elevation: 8,
+              color: const Color(0xFFD0D5CE).withOpacity(0.25), // soft dengan transparansi
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: Colors.white.withOpacity(0.4), // border halus
+                  width: 1.5,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          height: 100,
-                          child: Image.asset(
-                            'assets/images/images/Logo.naga.png',
-                            fit: BoxFit.contain,
-                          ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 100,
+                        child: Image.asset(
+                          'assets/images/images/Logo.naga.png',
+                          fit: BoxFit.contain,
                         ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          "PT. NAGA HYTAM",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.indigo,
-                          ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "PT. NAGA HYTAM",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFF5F5F5),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          "Sistem Manajemen Perusahaan",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                          ),
-                          textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Sistem Manajemen Perusahaan",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFFF5F5F5),
                         ),
-                        const SizedBox(height: 24),
-                        const Divider(thickness: 1.2),
-                        const SizedBox(height: 16),
-                        const Text(
-                          "Login",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Login",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFF5F5F5),
                         ),
-                        const SizedBox(height: 24),
-                        Form(
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                controller: _usernameCtrl,
-                                decoration: InputDecoration(
-                                  labelText: "Username",
-                                  prefixIcon: const Icon(Icons.person),
-                                  border: OutlineInputBorder(
+                      ),
+                      const SizedBox(height: 24),
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _usernameCtrl,
+                              decoration: InputDecoration(
+                                labelText: "Username",
+                                prefixIcon: const Icon(Icons.person, color: Color(0xFF3C5759)),
+                                labelStyle: const TextStyle(color: Color(0xFF3C5759)),
+                                filled: true,
+                                fillColor: const Color(0xFFD1EBDB),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              validator: (value) =>
+                                  value!.isEmpty ? 'Wajib diisi' : null,
+                            ),
+                            const SizedBox(height: 20),
+                            TextFormField(
+                              controller: _passwordCtrl,
+                              obscureText: true,
+                              decoration: InputDecoration(
+                                labelText: "Password",
+                                prefixIcon: const Icon(Icons.lock, color: Color(0xFF3C5759)),
+                                labelStyle: const TextStyle(color: Color(0xFF3C5759)),
+                                filled: true,
+                                fillColor: const Color(0xFFD1EBDB),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              validator: (value) =>
+                                  value!.isEmpty ? 'Wajib diisi' : null,
+                            ),
+                            const SizedBox(height: 30),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _handleLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF3C5759),
+                                  foregroundColor: Colors.white,
+                                  
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    side: BorderSide(
+                                        color: Colors.white, // border halus
+                                        width: 1.5,
+                                      ),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                validator: (value) =>
-                                    value!.isEmpty ? 'Wajib diisi' : null,
+                                child: const Text("Masuk"),
                               ),
-                              const SizedBox(height: 20),
-                              TextFormField(
-                                controller: _passwordCtrl,
-                                obscureText: true,
-                                decoration: InputDecoration(
-                                  labelText: "Password",
-                                  prefixIcon: const Icon(Icons.lock),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                validator: (value) =>
-                                    value!.isEmpty ? 'Wajib diisi' : null,
-                              ),
-                              const SizedBox(height: 30),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _handleLogin,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.indigo,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  child: const Text("Masuk"),
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -165,6 +183,8 @@ if (user != null) {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 }
