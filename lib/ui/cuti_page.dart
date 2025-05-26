@@ -29,91 +29,132 @@ class _CutiPageState extends State<CutiPage> {
     });
   }
 
-  Future<void> _deleteCuti( id) async {
-  await CutiService().hapus(id);
-  getData();
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Data berhasil dihapus')),
-  );
-}
+  Future<void> _deleteCuti(id) async {
+    await CutiService().hapus(id);
+    getData();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Data berhasil dihapus')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final isAdmin = UserInfo.role == 'admin';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Data Cuti')),
+      appBar: AppBar(
+        title: const Text('Data Cuti'),
+        backgroundColor: const Color(0xFF1E2C2F),
+      ),
       drawer: const Sidebar(),
-      body: RefreshIndicator(
-        onRefresh: getData,
-        child: ListView.builder(
-          itemCount: _cutiList.length,
-          itemBuilder: (context, index) {
-            final cuti = _cutiList[index];
-
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListTile(
-                title: Text(cuti.ajukanCuti),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Mulai: ${cuti.tanggalMulai}"),
-                    Text("Selesai: ${cuti.tanggalSelesai}"),
-                    Text("Alasan: ${cuti.alasan}"),
-                    Text("Status: ${cuti.status}"),
-                    const SizedBox(height: 8),
-                    if (isAdmin)
-                      Row(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: RefreshIndicator(
+          onRefresh: getData,
+          child: _cutiList.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Tidak ada data cuti.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.only(top: 12, bottom: 80),
+                  itemCount: _cutiList.length,
+                  itemBuilder: (context, index) {
+                    final cuti = _cutiList[index];
+                    return Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      CutiUpdateFormPage(cuti: cuti),
-                                ),
-                              ).then((_) => getData());
-                            },
+                          Text(
+                            cuti.ajukanCuti,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text("Konfirmasi"),
-                                  content: const Text("Hapus data ini?"),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: const Text("Batal"),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(ctx);
-                                        _deleteCuti(cuti.id);
-                                      },
-                                      child: const Text("Hapus"),
-                                    ),
-                                  ],
+                          const SizedBox(height: 8),
+                          Text("Mulai: ${cuti.tanggalMulai}",
+                              style: const TextStyle(color: Colors.white70)),
+                          Text("Selesai: ${cuti.tanggalSelesai}",
+                              style: const TextStyle(color: Colors.white70)),
+                          Text("Alasan: ${cuti.alasan}",
+                              style: const TextStyle(color: Colors.white70)),
+                          Text("Status: ${cuti.status}",
+                              style: const TextStyle(color: Colors.white70)),
+                          const SizedBox(height: 10),
+                          if (isAdmin)
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      color: Colors.blueAccent),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            CutiUpdateFormPage(cuti: cuti),
+                                      ),
+                                    ).then((_) => getData());
+                                  },
                                 ),
-                              );
-                            },
-                          ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.redAccent),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text("Konfirmasi"),
+                                        content:
+                                            const Text("Hapus data ini?"),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx),
+                                            child: const Text("Batal"),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(ctx);
+                                              _deleteCuti(cuti.id);
+                                            },
+                                            child: const Text("Hapus"),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
                         ],
                       ),
-                  ],
+                    );
+                  },
                 ),
-              ),
-            );
-          },
         ),
       ),
       floatingActionButton: UserInfo.role != 'admin'
           ? FloatingActionButton(
+              backgroundColor: Colors.tealAccent[700],
+              foregroundColor: Colors.black,
               onPressed: () async {
                 await Navigator.push(
                   context,
