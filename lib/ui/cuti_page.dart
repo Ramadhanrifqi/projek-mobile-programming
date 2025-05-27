@@ -24,8 +24,13 @@ class _CutiPageState extends State<CutiPage> {
 
   Future<void> getData() async {
     List<Cuti> data = await CutiService().listData();
+    final isAdmin = UserInfo.role == 'admin';
+    final username = UserInfo.username;
+
     setState(() {
-      _cutiList = data;
+      _cutiList = isAdmin
+          ? data
+          : data.where((cuti) => cuti.ajukanCuti == username).toList();
     });
   }
 
@@ -84,9 +89,10 @@ class _CutiPageState extends State<CutiPage> {
                           Text(
                             cuti.ajukanCuti,
                             style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold),
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text("Mulai: ${cuti.tanggalMulai}",

@@ -10,4 +10,5 @@ class UserInfo {
   static User? get user => loginUser;
   static String? get role => loginUser?.role;
   static String? get userId => loginUser?.id;
+  static String? get username => loginUser?.username;
 }
