@@ -12,8 +12,8 @@ class SlipGajiPage extends StatefulWidget {
 class _SlipGajiPageState extends State<SlipGajiPage> {
   final List<Map<String, dynamic>> dataKaryawan = [
     {'nama': 'Bahrudin', 'username': 'bahrudin', 'gaji': 5000000.0},
-    {'nama': 'Cantika Ayu', 'username': 'cantika', 'gaji': 5200000.0},
-    {'nama': 'Aditya S', 'username': 'aditya', 'gaji': 4800000.0},
+    {'nama': 'Cantika Ayu', 'username': 'Cantika Ayu', 'gaji': 5200000.0},
+    {'nama': 'Aditya S', 'username': 'Aditiya S', 'gaji': 4800000.0},
     {'nama': 'Denis', 'username': 'denis', 'gaji': 5100000.0},
   ];
 
