@@ -3,6 +3,14 @@ import '../service/login_service.dart';
 import '../model/user.dart';
 import '../helpers/user_info.dart';
 import 'beranda.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+Future<void> saveUserInfo(String username, String role) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('username', username);
+  await prefs.setString('role', role);
+}
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -26,12 +34,11 @@ class _LoginPageState extends State<LoginPage> {
       if (user != null) {
         UserInfo.setUser(user);
         if (!mounted) return;
+        await saveUserInfo(user.username, user.role);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => Beranda(
-              username: user.username,
-              role: user.role,
             ),
           ),
         );

@@ -61,7 +61,7 @@ class Sidebar extends StatelessWidget {
                             context,
                             icon: Icons.home,
                             title: "Beranda",
-                            destination: Beranda(username: '', role: ''),
+                            destination: Beranda(),
                           ),
                           _buildListTile(
                             context,

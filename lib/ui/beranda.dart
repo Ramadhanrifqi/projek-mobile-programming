@@ -1,30 +1,50 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widget/sidebar.dart';
 
-class Beranda extends StatelessWidget {
-  final String username;
-  final String role;
+class Beranda extends StatefulWidget {
+  const Beranda({super.key});
 
-  const Beranda({super.key, required this.username, required this.role});
+  @override
+  State<Beranda> createState() => _BerandaState();
+}
+
+class _BerandaState extends State<Beranda> {
+  String username = '';
+  String role = '';
+
+  @override
+  void initState() {
+    super.initState();
+    loadUserInfo();
+  }
+
+  Future<void> loadUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      username = prefs.getString('username') ?? '';
+      role = prefs.getString('role') ?? '';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-  title: const Text(
-    "Beranda",
-    style: TextStyle(color: Colors.white),
-  ),
-  backgroundColor: Colors.transparent,
-  elevation: 0,
-  centerTitle: true,
-  automaticallyImplyLeading: true,
-  iconTheme: const IconThemeData(color: Colors.white),
-),
-
+        title: const Text(
+          "Beranda",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       drawer: const Sidebar(),
       body: Container(
         width: double.infinity,
@@ -32,8 +52,8 @@ class Beranda extends StatelessWidget {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF192524), 
-              Color(0xFF3C5759), 
+              Color(0xFF192524),
+              Color(0xFF3C5759),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -52,7 +72,7 @@ class Beranda extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD1EBDB).withOpacity(0.25), // mint soft transparan
+                        color: const Color(0xFFD1EBDB).withOpacity(0.25),
                         borderRadius: BorderRadius.circular(25),
                         border: Border.all(color: const Color(0xFFEFECE9).withOpacity(0.4)),
                       ),
@@ -81,7 +101,7 @@ class Beranda extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFEFECE9), // Putih tulang
+                              color: Color(0xFFEFECE9),
                               height: 1.5,
                             ),
                           ),
@@ -91,7 +111,7 @@ class Beranda extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
-                              color: Color(0xFFD0D5CE), // abu pucat
+                              color: Color(0xFFD0D5CE),
                               height: 1.4,
                             ),
                           ),

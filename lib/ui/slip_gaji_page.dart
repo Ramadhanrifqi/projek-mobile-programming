@@ -94,53 +94,55 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
   );
 }
 
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: const Sidebar(),
-      backgroundColor: const Color(0xFF1F2C2C),
-      appBar: AppBar(
-        title: const Text(
-          'Slip Gaji PT. Naga Hytam',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    drawer: const Sidebar(),
+    appBar: AppBar(
+      title: const Text(
+        'Slip Gaji PT. Naga Hytam',
+        style: TextStyle(color: Colors.white),
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1F2C2C),
-              Color(0xFF3A4A4A),
-            ],
-          ),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      automaticallyImplyLeading: true,
+      iconTheme: const IconThemeData(color: Colors.white),
+    ),
+    extendBodyBehindAppBar: true, // agar gradient naik ke bawah AppBar
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1F2C2C),
+            Color(0xFF3A4A4A),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: GridView.builder(
+      ),
+      padding: const EdgeInsets.all(16.0),
+      child: filteredData.length == 1
+          ? Center(
+              child: SizedBox(
+                width: 250,
+                child: buildSlipCard(filteredData[0]),
+              ),
+            )
+          : GridView.builder(
               itemCount: filteredData.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: filteredData.length == 1 ? 1 : 2,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 childAspectRatio: 3 / 2,
               ),
               itemBuilder: (context, index) {
-                final karyawan = filteredData[index];
-                return buildSlipCard(karyawan);
+                return buildSlipCard(filteredData[index]);
               },
             ),
-          ),
-        ),
-      ),
-    );
-  }
+    ),
+  );
+}
+
 }
