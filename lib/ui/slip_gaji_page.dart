@@ -27,21 +27,73 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
 
   void filterData() {
     final isAdmin = UserInfo.role == 'admin';
-final username = UserInfo.username;
+    final username = UserInfo.username;
 
-print('Logged in as: $username, role: ${UserInfo.role}');
+    print('Logged in as: $username, role: ${UserInfo.role}');
 
-if (isAdmin) {
-  filteredData = dataKaryawan;
-} else {
-  filteredData = dataKaryawan
-      .where((k) => k['username'].toString().toLowerCase() == username?.toLowerCase())
-      .toList();
-}
-
+    if (isAdmin) {
+      filteredData = dataKaryawan;
+    } else {
+      filteredData = dataKaryawan
+          .where((k) =>
+              k['username'].toString().toLowerCase() ==
+              username?.toLowerCase())
+          .toList();
+    }
 
     setState(() {}); // untuk rebuild UI
   }
+
+ Widget buildSlipCard(Map<String, dynamic> karyawan) {
+  return Container(
+    constraints: const BoxConstraints(
+      maxHeight: 250, // tinggi maksimum agar proporsional
+      minWidth: 200,
+      maxWidth: 250,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.white24),
+    ),
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      mainAxisSize: MainAxisSize.min, // tinggi menyesuaikan isi
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Icon(Icons.account_circle, size: 40, color: Colors.white),
+        const SizedBox(height: 8),
+        const Text(
+          'Slip Gaji',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          karyawan['nama'],
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Rp ${karyawan['gaji'].toStringAsFixed(0)}',
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.white70,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -49,66 +101,44 @@ if (isAdmin) {
       drawer: const Sidebar(),
       backgroundColor: const Color(0xFF1F2C2C),
       appBar: AppBar(
-        title: const Text('Slip Gaji PT. Naga Hytam'),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF1F2C2C),
+        title: const Text(
+          'Slip Gaji PT. Naga Hytam',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: true,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.builder(
-          itemCount: filteredData.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 3 / 2,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF1F2C2C),
+              Color(0xFF3A4A4A),
+            ],
           ),
-          itemBuilder: (context, index) {
-            final karyawan = filteredData[index];
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white24),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: GridView.builder(
+              itemCount: filteredData.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: filteredData.length == 1 ? 1 : 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 3 / 2,
               ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Icon(Icons.account_circle,
-                      size: 40, color: Colors.white),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Slip Gaji',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    karyawan['nama'],
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Rp ${karyawan['gaji'].toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+              itemBuilder: (context, index) {
+                final karyawan = filteredData[index];
+                return buildSlipCard(karyawan);
+              },
+            ),
+          ),
         ),
       ),
     );

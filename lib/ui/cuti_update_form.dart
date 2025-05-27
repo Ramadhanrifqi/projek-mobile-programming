@@ -150,8 +150,11 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Ubah Cuti", style: TextStyle(color: Colors.white)),
+        elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: true,
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF1E2C2F),
+        backgroundColor: const Color(0xFF0F2027),
       ),
       body: Container(
         width: double.infinity,

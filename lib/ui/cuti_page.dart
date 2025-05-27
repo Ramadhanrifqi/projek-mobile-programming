@@ -47,11 +47,16 @@ class _CutiPageState extends State<CutiPage> {
     final isAdmin = UserInfo.role == 'admin';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Data Cuti'),
-        backgroundColor: const Color(0xFF1E2C2F),
-      ),
       drawer: const Sidebar(),
+      backgroundColor: const Color(0xFF0F2027),
+      appBar: AppBar(
+        title: const Text('Data Cuti',style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

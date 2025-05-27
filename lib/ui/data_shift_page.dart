@@ -38,6 +38,7 @@ class DataShiftPage extends StatelessWidget {
 Widget build(BuildContext context) {
   return Scaffold(
     drawer: const Sidebar(),
+    backgroundColor: Colors.transparent,
     body: Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
