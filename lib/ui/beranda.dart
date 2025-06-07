@@ -96,7 +96,7 @@ class _BerandaState extends State<Beranda> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            "Hi 👋,\nSaya $username",
+                            "Hi 👋,\nSelamat Datang $username",
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 22,

@@ -71,7 +71,7 @@ class Sidebar extends StatelessWidget {
                           ),
                           _buildListTile(
                             context,
-                            icon: Icons.people,
+                            icon: Icons.money,
                             title: "Slip Gaji",
                             destination: SlipGajiPage(),
                           ),
