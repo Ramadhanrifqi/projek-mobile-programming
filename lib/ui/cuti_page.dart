@@ -50,7 +50,7 @@ class _CutiPageState extends State<CutiPage> {
       drawer: const Sidebar(),
       backgroundColor: const Color(0xFF0F2027),
       appBar: AppBar(
-        title: const Text('Data Cuti',style: TextStyle(color: Colors.white)),
+        title: const Text('Data Cuti', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -79,42 +79,63 @@ class _CutiPageState extends State<CutiPage> {
                   itemCount: _cutiList.length,
                   itemBuilder: (context, index) {
                     final cuti = _cutiList[index];
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      margin:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white.withOpacity(0.07),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.white24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            cuti.ajukanCuti,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Row(
+                            children: [
+                              const Icon(Icons.person, color: Colors.white70),
+                              const SizedBox(width: 8),
+                              Text(
+                                cuti.ajukanCuti,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          Text("Mulai: ${cuti.tanggalMulai}",
-                              style: const TextStyle(color: Colors.white70)),
-                          Text("Selesai: ${cuti.tanggalSelesai}",
-                              style: const TextStyle(color: Colors.white70)),
-                          Text("Alasan: ${cuti.alasan}",
-                              style: const TextStyle(color: Colors.white70)),
-                          Text("Status: ${cuti.status}",
-                              style: const TextStyle(color: Colors.white70)),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 6,
+                            children: [
+                              _infoChip(Icons.date_range,
+                                  "Mulai: ${cuti.tanggalMulai}"),
+                              _infoChip(Icons.date_range,
+                                  "Selesai: ${cuti.tanggalSelesai}"),
+                              _infoChip(Icons.note, "Alasan: ${cuti.alasan}"),
+                              _infoChip(Icons.info_outline,
+                                  "Status: ${cuti.status}"),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
                           if (isAdmin)
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.edit,
-                                      color: Colors.blueAccent),
+                                      color: Colors.lightBlueAccent),
                                   onPressed: () {
                                     Navigator.push(
                                       context,
@@ -176,6 +197,28 @@ class _CutiPageState extends State<CutiPage> {
               child: const Icon(Icons.add),
             )
           : null,
+    );
+  }
+
+  Widget _infoChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white30),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.tealAccent[100], size: 18),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
     );
   }
 }
