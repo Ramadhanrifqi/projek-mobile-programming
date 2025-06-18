@@ -90,7 +90,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
       decoration: BoxDecoration(
 
         gradient: const LinearGradient(
-          colors: [Color(0xFF2E3A3F), Color(0xFF3C4B52)],
+          colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -108,33 +108,42 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
             child: Column(
               children: [
 
-                Icon(Icons.receipt_long, size: 40, color: Colors.white70),
+                Icon(Icons.receipt_long, size: 40, color: Color.fromARGB(179, 0, 0, 0)),
                 SizedBox(height: 8),
                 Text(
                   'Slip Gaji Karyawan',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 0, 0)),
                 ),
-                Divider(thickness: 1, color: Colors.white24),
+                Divider(thickness: 1, color: Color.fromARGB(60, 0, 0, 0)),
 
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          _buildRow('Nama Karyawan', karyawan['nama']),
+       const SizedBox(height: 8),
+_buildRow('Nama Karyawan', karyawan['nama'], textColor: Colors.black),
+const SizedBox(height: 12),
+
+
+          const Text('Pendapatan:', style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 0, 0))),
+
+          _buildRow('Gaji Pokok', 'Rp ${gajiPokok.toStringAsFixed(0)}', textColor: Colors.black),
+          _buildRow('Tunjangan', 'Rp ${tunjangan.toStringAsFixed(0)}', textColor: Colors.black),
+          _buildRow('Insentif', 'Rp ${insentif.toStringAsFixed(0)}', textColor: Colors.black),
+
           const SizedBox(height: 12),
 
-          const Text('Pendapatan:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        const Text(
+  'Potongan:',
+  style: TextStyle(
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  ),
+),
+_buildRow('PPh (Pajak Penghasilan)', '- Rp ${pph.toStringAsFixed(0)}', textColor: Colors.black),
+_buildRow('BPJS (Kesehatan & Ketenagakerjaan)', '- Rp ${bpjs.toStringAsFixed(0)}', textColor: Colors.black),
+const Divider(thickness: 1, color: Color.fromARGB(60, 0, 0, 0)),
+_buildRow('Total Diterima', 'Rp ${gajiBersih.toStringAsFixed(0)}', isBold: true, textColor: Colors.black),
 
-          _buildRow('Gaji Pokok', 'Rp ${gajiPokok.toStringAsFixed(0)}'),
-          _buildRow('Tunjangan', 'Rp ${tunjangan.toStringAsFixed(0)}'),
-          _buildRow('Insentif', 'Rp ${insentif.toStringAsFixed(0)}'),
-          const SizedBox(height: 12),
-
-          const Text('Potongan:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          _buildRow('PPh (Pajak Penghasilan)', '- Rp ${pph.toStringAsFixed(0)}'),
-          _buildRow('BPJS (Kesehatan & Ketenagakerjaan)', '- Rp ${bpjs.toStringAsFixed(0)}'),
-          const Divider(thickness: 1, color: Colors.white24),
-          _buildRow('Total Diterima', 'Rp ${gajiBersih.toStringAsFixed(0)}', isBold: true),
 
           const SizedBox(height: 12),
           Align(
@@ -142,7 +151,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
             child: Text(
               'PT. Naga Hytam',
 
-              style: TextStyle(color: Colors.grey.shade300),
+              style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
 
             ),
           )
@@ -151,38 +160,33 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
     );
   }
 
-  Widget _buildRow(String label, String value, {bool isBold = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
-              label,
-              style: TextStyle(
-
-                color: Colors.white,
-
-
-                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-          Text(
-            value,
+  Widget _buildRow(String label, String value, {bool isBold = false, Color textColor = Colors.white}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4.0),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          child: Text(
+            label,
             style: TextStyle(
-
-              color: Colors.white,
-
-
+              color: textColor,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
