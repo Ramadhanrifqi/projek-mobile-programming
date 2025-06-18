@@ -17,7 +17,7 @@ class Sidebar extends StatelessWidget {
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF192524), Color(0xFF3C5759)], // Gradasi gelap elegan
+            colors: [Color(0xFF192524), Color(0xFF3C5759)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -34,16 +34,20 @@ class Sidebar extends StatelessWidget {
                 user?.username ?? "Tidak diketahui",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFEFECE9), // Putih lembut
+                  color: Color(0xFFEFECE9),
                 ),
               ),
               accountEmail: Text(
                 user?.role ?? "",
-                style: const TextStyle(color: Color(0xFFD0D5CE)),
+                style: const TextStyle(
+                  color: Color(0xFFD0D5CE),
+                ),
               ),
-              currentAccountPicture: const CircleAvatar(
-                backgroundColor: Color(0xFFEFECE9),
-                child: Icon(Icons.person, size: 40, color: Color(0xFF3C5759)),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: const Color(0xFFEFECE9),
+                backgroundImage: AssetImage(
+                  'assets/images/images/${user?.username?.isNotEmpty == true ? user!.username : 'Foto.default'}.png',
+                ),
               ),
             ),
 
@@ -51,8 +55,10 @@ class Sidebar extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEFECE9), // Warna latar konten bawah
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(0)),
+                  color: Color(0xFFEFECE9),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(0),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -60,35 +66,30 @@ class Sidebar extends StatelessWidget {
                       child: ListView(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         children: [
-                          // Navigasi ke halaman beranda
                           _buildListTile(
                             context,
                             icon: Icons.home,
                             title: "Beranda",
                             destination: const Beranda(),
                           ),
-                          // Navigasi ke halaman cuti
                           _buildListTile(
                             context,
-                            icon: Icons.calendar_today, 
+                            icon: Icons.calendar_today,
                             title: "Pengajuan Cuti",
                             destination: const CutiPage(),
                           ),
-                          // Navigasi ke slip gaji
                           _buildListTile(
                             context,
                             icon: Icons.money,
                             title: "Slip Gaji",
                             destination: const SlipGajiPage(),
                           ),
-                          // Navigasi ke data shift
                           _buildListTile(
                             context,
                             icon: Icons.calendar_month,
                             title: "Data Shift",
                             destination: const DataShiftPage(),
                           ),
-                          // Logout
                           _buildListTile(
                             context,
                             icon: Icons.logout_rounded,
@@ -96,7 +97,9 @@ class Sidebar extends StatelessWidget {
                             onTap: () {
                               Navigator.pushAndRemoveUntil(
                                 context,
-                                MaterialPageRoute(builder: (context) => const LoginPage()),
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginPage(),
+                                ),
                                 (route) => false,
                               );
                             },
@@ -146,7 +149,7 @@ class Sidebar extends StatelessWidget {
           onTap: onTap ??
               () {
                 if (destination != null) {
-                  Navigator.pop(context); // Tutup drawer
+                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => destination),
@@ -156,7 +159,7 @@ class Sidebar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFD1EBDB), // Mint cerah
+              color: const Color(0xFFD1EBDB),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -168,7 +171,7 @@ class Sidebar extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, color: const Color(0xFF192524)), // Ikon gelap
+                Icon(icon, color: const Color(0xFF192524)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
@@ -180,7 +183,11 @@ class Sidebar extends StatelessWidget {
                     ),
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFF3C5759)),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: Color(0xFF3C5759),
+                ),
               ],
             ),
           ),

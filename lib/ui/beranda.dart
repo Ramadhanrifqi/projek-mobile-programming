@@ -11,18 +11,15 @@ class Beranda extends StatefulWidget {
 }
 
 class _BerandaState extends State<Beranda> {
-  // Variabel untuk menyimpan username dan role dari SharedPreferences
   String username = '';
   String role = '';
 
   @override
   void initState() {
     super.initState();
-    // Memuat informasi pengguna saat widget diinisialisasi
     loadUserInfo();
   }
 
-  // Fungsi untuk mengambil username dan role dari SharedPreferences
   Future<void> loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -48,11 +45,7 @@ class _BerandaState extends State<Beranda> {
         automaticallyImplyLeading: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-
-      // Menampilkan menu navigasi samping (drawer)
       drawer: const Sidebar(),
-
-      // Tampilan utama halaman
       body: Container(
         width: double.infinity,
         height: screenHeight,
@@ -70,8 +63,6 @@ class _BerandaState extends State<Beranda> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-
-              // Kartu sambutan pengguna
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: ClipRRect(
@@ -83,11 +74,13 @@ class _BerandaState extends State<Beranda> {
                       decoration: BoxDecoration(
                         color: const Color(0xFFD1EBDB).withOpacity(0.25),
                         borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: const Color(0xFFEFECE9).withOpacity(0.4)),
+                        border: Border.all(
+                          color: const Color(0xFFEFECE9).withOpacity(0.4),
+                        ),
                       ),
                       child: Column(
                         children: [
-                          // Foto profil
+                          // Foto profil dinamis berdasarkan username
                           Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
@@ -99,14 +92,14 @@ class _BerandaState extends State<Beranda> {
                                 ),
                               ],
                             ),
-                            child: const CircleAvatar(
+                            child: CircleAvatar(
                               radius: 50,
-                              backgroundImage: AssetImage('assets/images/images/Foto.default.png'),
+                              backgroundImage: AssetImage(
+                                'assets/images/images/${username.isNotEmpty ? username : 'Foto.default'}.png',
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),
-
-                          // Teks sambutan pengguna
                           Text(
                             "Hi 👋,\nSelamat Datang $username",
                             textAlign: TextAlign.center,
@@ -118,8 +111,6 @@ class _BerandaState extends State<Beranda> {
                             ),
                           ),
                           const SizedBox(height: 8),
-
-                          // Nama perusahaan
                           const Text(
                             "PT. Naga Hytam\nSejahtera Abadi",
                             textAlign: TextAlign.center,
@@ -135,11 +126,7 @@ class _BerandaState extends State<Beranda> {
                   ),
                 ),
               ),
-
-              // Spacer untuk mengisi ruang kosong
               const Spacer(),
-
-              // Teks copyright di bagian bawah
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
                 child: Text(
