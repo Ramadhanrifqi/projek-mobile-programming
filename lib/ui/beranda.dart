@@ -14,7 +14,6 @@ class _BerandaState extends State<Beranda> {
   // Variabel untuk menyimpan username dan role dari SharedPreferences
   String username = '';
   String role = '';
-  int userId = 0;
 
   @override
   void initState() {
@@ -29,23 +28,12 @@ class _BerandaState extends State<Beranda> {
     setState(() {
       username = prefs.getString('username') ?? '';
       role = prefs.getString('role') ?? '';
-      userId = prefs.getInt('user_id') ?? 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-
-    // Logika pemilihan gambar profil
-    String photoPath;
-    if (userId == 1 || username == 'admin1') {
-      photoPath = 'assets/images/images/martin.png';
-    } else if (userId == 4 || username == 'Cantika Ayu') {
-      photoPath = 'assets/images/images/cantika.jpg';
-    } else {
-      photoPath = 'assets/images/images/profil_operator.jpg';
-    }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -111,9 +99,9 @@ class _BerandaState extends State<Beranda> {
                                 ),
                               ],
                             ),
-                            child: CircleAvatar(
+                            child: const CircleAvatar(
                               radius: 50,
-                              backgroundImage: AssetImage(photoPath),
+                              backgroundImage: AssetImage('assets/images/images/Foto.default.png'),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -133,7 +121,7 @@ class _BerandaState extends State<Beranda> {
 
                           // Nama perusahaan
                           const Text(
-                            "PT. Naga Hytam Sejahtera Abadi",
+                            "PT. Naga Hytam\nSejahtera Abadi",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,

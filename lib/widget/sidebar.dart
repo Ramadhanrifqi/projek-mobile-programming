@@ -13,19 +13,11 @@ class Sidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = UserInfo.user;
 
-// Logika pemilihan gambar profil
-final String photoPath = (user?.id == 1 || user?.username == 'admin1')
-    ? 'assets/images/images/martin.png'
-    : (user?.id == 4 || user?.username == 'Cantika Ayu')
-        ? 'assets/images/images/cantika.jpg'
-        : 'assets/images/images/profil_operator.jpg';
-
-
     return Drawer(
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF192524), Color(0xFF3C5759)],
+            colors: [Color(0xFF192524), Color(0xFF3C5759)], // Gradasi gelap elegan
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -42,15 +34,16 @@ final String photoPath = (user?.id == 1 || user?.username == 'admin1')
                 user?.username ?? "Tidak diketahui",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFEFECE9),
+                  color: Color(0xFFEFECE9), // Putih lembut
                 ),
               ),
               accountEmail: Text(
-                user?.role ?? "",
+                user?.username ?? "",
                 style: const TextStyle(color: Color(0xFFD0D5CE)),
               ),
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: AssetImage(photoPath),
+              currentAccountPicture: const CircleAvatar(
+                backgroundColor: Color(0xFFEFECE9),
+                child: Icon(Icons.person, size: 40, color: Color(0xFF3C5759)),
               ),
             ),
 
@@ -58,7 +51,7 @@ final String photoPath = (user?.id == 1 || user?.username == 'admin1')
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEFECE9),
+                  color: Color(0xFFEFECE9), // Warna latar konten bawah
                   borderRadius: BorderRadius.vertical(top: Radius.circular(0)),
                 ),
                 child: Column(
@@ -75,13 +68,12 @@ final String photoPath = (user?.id == 1 || user?.username == 'admin1')
                             destination: const Beranda(),
                           ),
                           // Navigasi ke halaman cuti
-                        _buildListTile(
-                          context,
-                          icon: Icons.calendar_today,
-                          title: "Pengajuan Cuti",
-                          destination: CutiPage(),
-                        ),
-
+                          _buildListTile(
+                            context,
+                            icon: Icons.accessible,
+                            title: "Pengajuan Cuti",
+                            destination: const CutiPage(),
+                          ),
                           // Navigasi ke slip gaji
                           _buildListTile(
                             context,
@@ -113,11 +105,10 @@ final String photoPath = (user?.id == 1 || user?.username == 'admin1')
                       ),
                     ),
 
-                    // Footer hak cipta kita
+                    // Footer hak cipta
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
-                        //matap
                         "©2025 Naga Hytam Sejahtera Abadi\nAll Rights Reserved.",
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -165,7 +156,7 @@ final String photoPath = (user?.id == 1 || user?.username == 'admin1')
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFD1EBDB),
+              color: const Color(0xFFD1EBDB), // Mint cerah
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -177,7 +168,7 @@ final String photoPath = (user?.id == 1 || user?.username == 'admin1')
             ),
             child: Row(
               children: [
-                Icon(icon, color: const Color(0xFF192524)),
+                Icon(icon, color: const Color(0xFF192524)), // Ikon gelap
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
