@@ -85,20 +85,10 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
     double totalPotongan = pph + bpjs;
     double gajiBersih = totalPendapatan - totalPotongan;
 
-    double gajiPokok = karyawan['gaji_pokok'];
-    double tunjangan = karyawan['tunjangan'];
-    double insentif = karyawan['insentif'];
-    double pph = karyawan['pph'];
-    double bpjs = karyawan['bpjs'];
-
-    double totalPendapatan = gajiPokok + tunjangan + insentif;
-    double totalPotongan = pph + bpjs;
-    double gajiBersih = totalPendapatan - totalPotongan;
-
     return Container(
       padding: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+
         gradient: const LinearGradient(
           colors: [Color(0xFF2E3A3F), Color(0xFF3C4B52)],
           begin: Alignment.topLeft,
@@ -109,14 +99,15 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
           BoxShadow(color: Colors.black38, blurRadius: 6, offset: Offset(2, 4)),
         ],
         border: Border.all(color: Colors.white24),
+
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Center(
             child: Column(
               children: [
+
                 Icon(Icons.receipt_long, size: 40, color: Colors.white70),
                 SizedBox(height: 8),
                 Text(
@@ -124,28 +115,35 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 Divider(thickness: 1, color: Colors.white24),
+
               ],
             ),
           ),
           const SizedBox(height: 8),
           _buildRow('Nama Karyawan', karyawan['nama']),
           const SizedBox(height: 12),
+
           const Text('Pendapatan:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+
           _buildRow('Gaji Pokok', 'Rp ${gajiPokok.toStringAsFixed(0)}'),
           _buildRow('Tunjangan', 'Rp ${tunjangan.toStringAsFixed(0)}'),
           _buildRow('Insentif', 'Rp ${insentif.toStringAsFixed(0)}'),
           const SizedBox(height: 12),
+
           const Text('Potongan:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
           _buildRow('PPh (Pajak Penghasilan)', '- Rp ${pph.toStringAsFixed(0)}'),
           _buildRow('BPJS (Kesehatan & Ketenagakerjaan)', '- Rp ${bpjs.toStringAsFixed(0)}'),
           const Divider(thickness: 1, color: Colors.white24),
           _buildRow('Total Diterima', 'Rp ${gajiBersih.toStringAsFixed(0)}', isBold: true),
+
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.bottomRight,
             child: Text(
               'PT. Naga Hytam',
+
               style: TextStyle(color: Colors.grey.shade300),
+
             ),
           )
         ],
@@ -163,7 +161,10 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
             child: Text(
               label,
               style: TextStyle(
+
                 color: Colors.white,
+
+
                 fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -171,7 +172,10 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
           Text(
             value,
             style: TextStyle(
+
               color: Colors.white,
+
+
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -187,17 +191,15 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
       appBar: AppBar(
         title: const Text(
           'Slip Gaji PT. Naga Hytam Sejahter Abadi',
-          'Slip Gaji PT. Naga Hytam Sejahter Abadi',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.black87,
-        elevation: 2,
         backgroundColor: Colors.black87,
         elevation: 2,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
+
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF101C1D), Color(0xFF1C2B2D)],
@@ -205,26 +207,9 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
             end: Alignment.bottomCenter,
           ),
         ),
+
+  
         padding: const EdgeInsets.all(16.0),
-        child: filteredData.length == 1
-            ? Center(
-                child: SizedBox(
-                  width: 320,
-                  child: buildSlipCard(filteredData[0]),
-                ),
-              )
-            : GridView.builder(
-                itemCount: filteredData.length,
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 380,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 3 / 4.5,
-                ),
-                itemBuilder: (context, index) {
-                  return buildSlipCard(filteredData[index]);
-                },
-              ),
         child: filteredData.length == 1
             ? Center(
                 child: SizedBox(
