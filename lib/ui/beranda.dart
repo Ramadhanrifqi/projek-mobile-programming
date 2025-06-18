@@ -13,6 +13,7 @@ class Beranda extends StatefulWidget {
 class _BerandaState extends State<Beranda> {
   String username = '';
   String role = '';
+  int userId = 0;
 
   @override
   void initState() {
@@ -25,12 +26,23 @@ class _BerandaState extends State<Beranda> {
     setState(() {
       username = prefs.getString('username') ?? '';
       role = prefs.getString('role') ?? '';
+      userId = prefs.getInt('user_id') ?? 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+
+    // Logika pemilihan gambar profil
+    String photoPath;
+    if (userId == 1 || username == 'admin1') {
+      photoPath = 'assets/images/images/martin.png';
+    } else if (userId == 4 || username == 'Cantika Ayu') {
+      photoPath = 'assets/images/images/cantika.jpg';
+    } else {
+      photoPath = 'assets/images/images/profil_operator.jpg';
+    }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -89,9 +101,9 @@ class _BerandaState extends State<Beranda> {
                                 ),
                               ],
                             ),
-                            child: const CircleAvatar(
+                            child: CircleAvatar(
                               radius: 50,
-                              backgroundImage: AssetImage('assets/images/images/Foto.default.png'),
+                              backgroundImage: AssetImage(photoPath),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -107,7 +119,7 @@ class _BerandaState extends State<Beranda> {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            "PT. Naga Hytam\nSejahtera Abadi",
+                            "PT. Naga Hytam Sejahtera Abadi",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
