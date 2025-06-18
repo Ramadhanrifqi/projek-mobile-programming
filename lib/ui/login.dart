@@ -94,7 +94,7 @@ Widget build(BuildContext context) {
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        "PT. NAGA HYTAM",
+                        "PT. NAGA HYTAM SEJAHTERA ABADI",
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
