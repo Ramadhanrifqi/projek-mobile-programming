@@ -13,11 +13,19 @@ class Sidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = UserInfo.user;
 
+// Logika pemilihan gambar profil
+final String photoPath = (user?.id == 1 || user?.username == 'admin1')
+    ? 'assets/images/images/martin.png'
+    : (user?.id == 4 || user?.username == 'Cantika Ayu')
+        ? 'assets/images/images/cantika.jpg'
+        : 'assets/images/images/profil_operator.jpg';
+
+
     return Drawer(
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF192524), Color(0xFF3C5759)], // Gradasi gelap elegan
+            colors: [Color(0xFF192524), Color(0xFF3C5759)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -34,16 +42,16 @@ class Sidebar extends StatelessWidget {
                 user?.username ?? "Tidak diketahui",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFEFECE9), // Putih lembut
+                  color: Color(0xFFEFECE9),
                 ),
               ),
               accountEmail: Text(
                 user?.role ?? "",
+                user?.role ?? "",
                 style: const TextStyle(color: Color(0xFFD0D5CE)),
               ),
-              currentAccountPicture: const CircleAvatar(
-                backgroundColor: Color(0xFFEFECE9),
-                child: Icon(Icons.person, size: 40, color: Color(0xFF3C5759)),
+              currentAccountPicture: CircleAvatar(
+                backgroundImage: AssetImage(photoPath),
               ),
             ),
 
@@ -51,7 +59,7 @@ class Sidebar extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEFECE9), // Warna latar konten bawah
+                  color: Color(0xFFEFECE9),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(0)),
                 ),
                 child: Column(
@@ -106,10 +114,11 @@ class Sidebar extends StatelessWidget {
                       ),
                     ),
 
-                    // Footer hak cipta
+                    // Footer hak cipta kita
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
+                        //matap
                         "©2025 Naga Hytam Sejahtera Abadi\nAll Rights Reserved.",
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -157,7 +166,7 @@ class Sidebar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFD1EBDB), // Mint cerah
+              color: const Color(0xFFD1EBDB),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -169,7 +178,7 @@ class Sidebar extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, color: const Color(0xFF192524)), // Ikon gelap
+                Icon(icon, color: const Color(0xFF192524)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(

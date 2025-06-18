@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PT Naga Hitam',
+      title: 'PT Naga Hytam Sejahtera Abadi',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const LoginPage(),
       debugShowCheckedModeBanner: false,

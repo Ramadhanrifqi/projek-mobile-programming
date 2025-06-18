@@ -85,7 +85,18 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
     double totalPotongan = pph + bpjs;
     double gajiBersih = totalPendapatan - totalPotongan;
 
+    double gajiPokok = karyawan['gaji_pokok'];
+    double tunjangan = karyawan['tunjangan'];
+    double insentif = karyawan['insentif'];
+    double pph = karyawan['pph'];
+    double bpjs = karyawan['bpjs'];
+
+    double totalPendapatan = gajiPokok + tunjangan + insentif;
+    double totalPotongan = pph + bpjs;
+    double gajiBersih = totalPendapatan - totalPotongan;
+
     return Container(
+      padding: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -100,6 +111,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
         border: Border.all(color: Colors.white24),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Center(
@@ -175,8 +187,11 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
       appBar: AppBar(
         title: const Text(
           'Slip Gaji PT. Naga Hytam Sejahter Abadi',
+          'Slip Gaji PT. Naga Hytam Sejahter Abadi',
           style: TextStyle(color: Colors.white),
         ),
+        backgroundColor: Colors.black87,
+        elevation: 2,
         backgroundColor: Colors.black87,
         elevation: 2,
         centerTitle: true,
@@ -191,6 +206,25 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
           ),
         ),
         padding: const EdgeInsets.all(16.0),
+        child: filteredData.length == 1
+            ? Center(
+                child: SizedBox(
+                  width: 320,
+                  child: buildSlipCard(filteredData[0]),
+                ),
+              )
+            : GridView.builder(
+                itemCount: filteredData.length,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 380,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 3 / 4.5,
+                ),
+                itemBuilder: (context, index) {
+                  return buildSlipCard(filteredData[index]);
+                },
+              ),
         child: filteredData.length == 1
             ? Center(
                 child: SizedBox(
