@@ -11,17 +11,23 @@ class CutiForm extends StatefulWidget {
 }
 
 class _CutiFormState extends State<CutiForm> {
+  // Key untuk validasi form
   final _formKey = GlobalKey<FormState>();
+
+  // Controller untuk input field
   final _namaCtrl = TextEditingController();
   final _tanggalMulaiCtrl = TextEditingController();
   final _tanggalSelesaiCtrl = TextEditingController();
   final _alasanCtrl = TextEditingController();
 
+  // Menyimpan ID user yang login
   String? _userId;
 
   @override
   void initState() {
     super.initState();
+
+    // Ambil data user yang login dari UserInfo
     final user = UserInfo.user;
     if (user != null) {
       _namaCtrl.text = user.username ?? '';
@@ -34,12 +40,12 @@ class _CutiFormState extends State<CutiForm> {
     return Scaffold(
       backgroundColor: const Color(0xFF0F2027),
       appBar: AppBar(
-        title: const Text("Tambah Cuti",style: TextStyle(color: Colors.white)),
+        title: const Text("Tambah Cuti", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
-                elevation: 0,
-                centerTitle: true,
-                automaticallyImplyLeading: true,
-                iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: true,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
         width: double.infinity,
@@ -65,6 +71,7 @@ class _CutiFormState extends State<CutiForm> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Ikon dan judul form
                   const Icon(Icons.calendar_today, size: 40, color: Colors.white),
                   const SizedBox(height: 16),
                   const Text(
@@ -76,6 +83,8 @@ class _CutiFormState extends State<CutiForm> {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // Input field
                   _styledField(_fieldNama()),
                   const SizedBox(height: 16),
                   _styledField(_fieldTanggalMulai()),
@@ -83,7 +92,10 @@ class _CutiFormState extends State<CutiForm> {
                   _styledField(_fieldTanggalSelesai()),
                   const SizedBox(height: 16),
                   _styledField(_fieldAlasan()),
+
                   const SizedBox(height: 24),
+
+                  // Tombol Simpan
                   _tombolSimpan(),
                 ],
               ),
@@ -94,6 +106,7 @@ class _CutiFormState extends State<CutiForm> {
     );
   }
 
+  // Widget pembungkus untuk styling field
   Widget _styledField(Widget child) {
     return Theme(
       data: Theme.of(context).copyWith(
@@ -115,6 +128,7 @@ class _CutiFormState extends State<CutiForm> {
     );
   }
 
+  // Field Nama Pegawai (readonly)
   Widget _fieldNama() {
     return TextFormField(
       controller: _namaCtrl,
@@ -124,6 +138,7 @@ class _CutiFormState extends State<CutiForm> {
     );
   }
 
+  // Field Tanggal Mulai (dengan date picker)
   Widget _fieldTanggalMulai() {
     return TextFormField(
       controller: _tanggalMulaiCtrl,
@@ -153,6 +168,7 @@ class _CutiFormState extends State<CutiForm> {
     );
   }
 
+  // Field Tanggal Selesai (dengan date picker)
   Widget _fieldTanggalSelesai() {
     return TextFormField(
       controller: _tanggalSelesaiCtrl,
@@ -182,6 +198,7 @@ class _CutiFormState extends State<CutiForm> {
     );
   }
 
+  // Field Alasan Cuti
   Widget _fieldAlasan() {
     return TextFormField(
       controller: _alasanCtrl,
@@ -192,6 +209,7 @@ class _CutiFormState extends State<CutiForm> {
     );
   }
 
+  // Tombol untuk menyimpan pengajuan cuti
   Widget _tombolSimpan() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
@@ -204,6 +222,7 @@ class _CutiFormState extends State<CutiForm> {
       ),
       onPressed: () async {
         if (_formKey.currentState!.validate()) {
+          // Validasi tambahan: tanggal selesai tidak boleh sebelum tanggal mulai
           DateTime mulai = DateTime.parse(_tanggalMulaiCtrl.text);
           DateTime selesai = DateTime.parse(_tanggalSelesaiCtrl.text);
 
@@ -214,6 +233,7 @@ class _CutiFormState extends State<CutiForm> {
             return;
           }
 
+          // Membuat objek Cuti baru dan menyimpannya
           Cuti cuti = Cuti(
             ajukanCuti: _namaCtrl.text,
             tanggalMulai: _tanggalMulaiCtrl.text,
@@ -227,7 +247,7 @@ class _CutiFormState extends State<CutiForm> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Data berhasil disimpan")),
             );
-            Navigator.pop(context);
+            Navigator.pop(context); // Kembali ke halaman sebelumnya
           });
         }
       },

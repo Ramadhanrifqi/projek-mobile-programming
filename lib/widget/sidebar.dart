@@ -17,13 +17,14 @@ class Sidebar extends StatelessWidget {
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF192524), Color(0xFF3C5759)], // gradasi gelap hazy
+            colors: [Color(0xFF192524), Color(0xFF3C5759)], // Gradasi gelap elegan
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: Column(
           children: [
+            // Header bagian atas dengan informasi akun
             UserAccountsDrawerHeader(
               margin: EdgeInsets.zero,
               decoration: const BoxDecoration(
@@ -33,7 +34,7 @@ class Sidebar extends StatelessWidget {
                 user?.username ?? "Tidak diketahui",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFEFECE9), // soft white
+                  color: Color(0xFFEFECE9), // Putih lembut
                 ),
               ),
               accountEmail: Text(
@@ -45,10 +46,12 @@ class Sidebar extends StatelessWidget {
                 child: Icon(Icons.person, size: 40, color: Color(0xFF3C5759)),
               ),
             ),
+
+            // Konten navigasi
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEFECE9), // soft beige untuk konten bawah
+                  color: Color(0xFFEFECE9), // Warna latar konten bawah
                   borderRadius: BorderRadius.vertical(top: Radius.circular(0)),
                 ),
                 child: Column(
@@ -57,30 +60,35 @@ class Sidebar extends StatelessWidget {
                       child: ListView(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         children: [
+                          // Navigasi ke halaman beranda
                           _buildListTile(
                             context,
                             icon: Icons.home,
                             title: "Beranda",
-                            destination: Beranda(),
+                            destination: const Beranda(),
                           ),
+                          // Navigasi ke halaman cuti
                           _buildListTile(
                             context,
                             icon: Icons.accessible,
                             title: "Pengajuan Cuti",
-                            destination: CutiPage(),
+                            destination: const CutiPage(),
                           ),
+                          // Navigasi ke slip gaji
                           _buildListTile(
                             context,
                             icon: Icons.money,
                             title: "Slip Gaji",
-                            destination: SlipGajiPage(),
+                            destination: const SlipGajiPage(),
                           ),
+                          // Navigasi ke data shift
                           _buildListTile(
                             context,
                             icon: Icons.calendar_month,
                             title: "Data Shift",
-                            destination: DataShiftPage(),
+                            destination: const DataShiftPage(),
                           ),
+                          // Logout
                           _buildListTile(
                             context,
                             icon: Icons.logout_rounded,
@@ -88,7 +96,7 @@ class Sidebar extends StatelessWidget {
                             onTap: () {
                               Navigator.pushAndRemoveUntil(
                                 context,
-                                MaterialPageRoute(builder: (context) => LoginPage()),
+                                MaterialPageRoute(builder: (context) => const LoginPage()),
                                 (route) => false,
                               );
                             },
@@ -96,6 +104,8 @@ class Sidebar extends StatelessWidget {
                         ],
                       ),
                     ),
+
+                    // Footer hak cipta
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
@@ -119,6 +129,7 @@ class Sidebar extends StatelessWidget {
     );
   }
 
+  // Widget pembuat ListTile bergaya custom
   Widget _buildListTile(
     BuildContext context, {
     required IconData icon,
@@ -135,7 +146,7 @@ class Sidebar extends StatelessWidget {
           onTap: onTap ??
               () {
                 if (destination != null) {
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Tutup drawer
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => destination),
@@ -145,7 +156,7 @@ class Sidebar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFD1EBDB), // hijau mint terang
+              color: const Color(0xFFD1EBDB), // Mint cerah
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -157,7 +168,7 @@ class Sidebar extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, color: const Color(0xFF192524)), // ikon gelap
+                Icon(icon, color: const Color(0xFF192524)), // Ikon gelap
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(

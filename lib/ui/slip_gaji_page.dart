@@ -10,6 +10,7 @@ class SlipGajiPage extends StatefulWidget {
 }
 
 class _SlipGajiPageState extends State<SlipGajiPage> {
+  // Data dummy slip gaji karyawan
   final List<Map<String, dynamic>> dataKaryawan = [
     {'nama': 'Bahrudin', 'username': 'bahrudin', 'gaji': 5000000.0},
     {'nama': 'Cantika Ayu', 'username': 'Cantika Ayu', 'gaji': 5200000.0},
@@ -17,6 +18,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
     {'nama': 'Denis', 'username': 'denis', 'gaji': 5100000.0},
   ];
 
+  // Data hasil filter berdasarkan role (admin/user)
   List<Map<String, dynamic>> filteredData = [];
 
   @override
@@ -25,6 +27,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
     filterData();
   }
 
+  // Fungsi filter data berdasarkan role login
   void filterData() {
     final isAdmin = UserInfo.role == 'admin';
     final username = UserInfo.username;
@@ -34,16 +37,16 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
     if (isAdmin) {
       filteredData = dataKaryawan;
     } else {
-      filteredData = dataKaryawan
-          .where((k) =>
-              k['username'].toString().toLowerCase() ==
-              username?.toLowerCase())
-          .toList();
+      filteredData = dataKaryawan.where((k) {
+        return k['username'].toString().toLowerCase() ==
+            username?.toLowerCase();
+      }).toList();
     }
 
     setState(() {});
   }
 
+  // Widget untuk menampilkan 1 kartu slip gaji
   Widget buildSlipCard(Map<String, dynamic> karyawan) {
     return Container(
       constraints: const BoxConstraints(
@@ -57,7 +60,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Tinggi mengikuti isi
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Icon(Icons.account_circle, size: 40, color: Colors.white),
@@ -83,8 +86,6 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
           const SizedBox(height: 8),
           Text(
             'Rp ${karyawan['gaji'].toStringAsFixed(0)}',
-            softWrap: true,
-            overflow: TextOverflow.visible,
             style: const TextStyle(
               fontSize: 14,
               color: Colors.white70,
@@ -123,24 +124,31 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
           ),
         ),
         padding: const EdgeInsets.all(16.0),
-        child: filteredData.length == 1
-            ? Center(
-                child: SizedBox(
-                  width: 250,
-                  child: buildSlipCard(filteredData[0]),
+        child: filteredData.isEmpty
+            ? const Center(
+                child: Text(
+                  'Data slip gaji tidak tersedia.',
+                  style: TextStyle(color: Colors.white70),
                 ),
               )
-            : GridView.builder(
-                itemCount: filteredData.length,
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 300,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                ),
-                itemBuilder: (context, index) {
-                  return buildSlipCard(filteredData[index]);
-                },
-              ),
+            : filteredData.length == 1
+                ? Center(
+                    child: SizedBox(
+                      width: 250,
+                      child: buildSlipCard(filteredData[0]),
+                    ),
+                  )
+                : GridView.builder(
+                    itemCount: filteredData.length,
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 300,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                    ),
+                    itemBuilder: (context, index) {
+                      return buildSlipCard(filteredData[index]);
+                    },
+                  ),
       ),
     );
   }

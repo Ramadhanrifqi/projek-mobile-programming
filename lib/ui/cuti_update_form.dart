@@ -4,8 +4,9 @@ import '../../service/cuti_service.dart';
 import '../../helpers/user_info.dart';
 import 'cuti_page.dart';
 
+// Halaman untuk mengubah data cuti
 class CutiUpdateFormPage extends StatefulWidget {
-  final Cuti cuti;
+  final Cuti cuti; // Data cuti yang akan diubah
 
   const CutiUpdateFormPage({super.key, required this.cuti});
 
@@ -14,6 +15,7 @@ class CutiUpdateFormPage extends StatefulWidget {
 }
 
 class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
+  // Controller untuk setiap field
   final TextEditingController _ajukanCutiCtrl = TextEditingController();
   final TextEditingController _tanggalMulaiCtrl = TextEditingController();
   final TextEditingController _tanggalSelesaiCtrl = TextEditingController();
@@ -23,6 +25,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
   @override
   void initState() {
     super.initState();
+    // Set nilai awal dari data yang akan diubah
     _ajukanCutiCtrl.text = widget.cuti.ajukanCuti;
     _tanggalMulaiCtrl.text = widget.cuti.tanggalMulai;
     _tanggalSelesaiCtrl.text = widget.cuti.tanggalSelesai;
@@ -30,6 +33,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     _statusCtrl.text = widget.cuti.status;
   }
 
+  // Field input: nama pengaju cuti (readonly jika admin)
   Widget _fieldAjukanCuti() {
     return TextFormField(
       controller: _ajukanCutiCtrl,
@@ -39,6 +43,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     );
   }
 
+  // Field input: tanggal mulai cuti (readonly jika admin)
   Widget _fieldTanggalMulai() {
     return TextFormField(
       controller: _tanggalMulaiCtrl,
@@ -48,6 +53,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     );
   }
 
+  // Field input: tanggal selesai cuti (readonly jika admin)
   Widget _fieldTanggalSelesai() {
     return TextFormField(
       controller: _tanggalSelesaiCtrl,
@@ -57,6 +63,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     );
   }
 
+  // Field input: alasan cuti (readonly jika admin)
   Widget _fieldAlasan() {
     return TextFormField(
       controller: _alasanCtrl,
@@ -66,6 +73,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     );
   }
 
+  // Field input: status cuti (hanya muncul untuk admin)
   Widget _fieldStatus() {
     if (UserInfo.role != 'admin') return const SizedBox();
 
@@ -88,6 +96,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     );
   }
 
+  // Tombol simpan perubahan cuti
   Widget _tombolSimpan() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
@@ -99,6 +108,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
         ),
       ),
       onPressed: () async {
+        // Buat objek Cuti dari input
         Cuti cuti = Cuti(
           ajukanCuti: _ajukanCutiCtrl.text,
           tanggalMulai: _tanggalMulaiCtrl.text,
@@ -110,6 +120,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
 
         String id = widget.cuti.id.toString();
 
+        // Update data dan kembali ke halaman utama cuti
         await CutiService().ubah(cuti, id).then((value) {
           Navigator.pop(context);
           Navigator.pushReplacement(
@@ -124,6 +135,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     );
   }
 
+  // Styling umum untuk semua input field
   Widget _styledField(Widget child) {
     return Theme(
       data: Theme.of(context).copyWith(

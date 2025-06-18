@@ -14,14 +14,17 @@ class CutiPage extends StatefulWidget {
 }
 
 class _CutiPageState extends State<CutiPage> {
+  // Menyimpan daftar cuti yang ditampilkan
   List<Cuti> _cutiList = [];
 
   @override
   void initState() {
     super.initState();
+    // Memuat data saat halaman dibuka
     getData();
   }
 
+  // Mengambil data cuti dari service dan filter berdasarkan role
   Future<void> getData() async {
     List<Cuti> data = await CutiService().listData();
     final isAdmin = UserInfo.role == 'admin';
@@ -34,9 +37,10 @@ class _CutiPageState extends State<CutiPage> {
     });
   }
 
+  // Fungsi untuk menghapus data cuti
   Future<void> _deleteCuti(id) async {
     await CutiService().hapus(id);
-    getData();
+    getData(); // Perbarui data setelah penghapusan
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Data berhasil dihapus')),
     );
@@ -47,7 +51,7 @@ class _CutiPageState extends State<CutiPage> {
     final isAdmin = UserInfo.role == 'admin';
 
     return Scaffold(
-      drawer: const Sidebar(),
+      drawer: const Sidebar(), // Drawer navigasi
       backgroundColor: const Color(0xFF0F2027),
       appBar: AppBar(
         title: const Text('Data Cuti', style: TextStyle(color: Colors.white)),
@@ -66,7 +70,7 @@ class _CutiPageState extends State<CutiPage> {
           ),
         ),
         child: RefreshIndicator(
-          onRefresh: getData,
+          onRefresh: getData, // Tarik untuk refresh
           child: _cutiList.isEmpty
               ? const Center(
                   child: Text(
@@ -100,6 +104,7 @@ class _CutiPageState extends State<CutiPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Menampilkan nama pengaju cuti
                           Row(
                             children: [
                               const Icon(Icons.person, color: Colors.white70),
@@ -115,6 +120,8 @@ class _CutiPageState extends State<CutiPage> {
                             ],
                           ),
                           const SizedBox(height: 12),
+
+                          // Informasi cuti
                           Wrap(
                             spacing: 10,
                             runSpacing: 6,
@@ -129,10 +136,13 @@ class _CutiPageState extends State<CutiPage> {
                             ],
                           ),
                           const SizedBox(height: 12),
+
+                          // Aksi hanya untuk admin: Edit & Hapus
                           if (isAdmin)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
+                                // Tombol edit
                                 IconButton(
                                   icon: const Icon(Icons.edit,
                                       color: Colors.lightBlueAccent),
@@ -146,6 +156,7 @@ class _CutiPageState extends State<CutiPage> {
                                     ).then((_) => getData());
                                   },
                                 ),
+                                // Tombol hapus dengan konfirmasi
                                 IconButton(
                                   icon: const Icon(Icons.delete,
                                       color: Colors.redAccent),
@@ -183,6 +194,8 @@ class _CutiPageState extends State<CutiPage> {
                 ),
         ),
       ),
+
+      // Tombol tambah cuti hanya muncul jika bukan admin
       floatingActionButton: UserInfo.role != 'admin'
           ? FloatingActionButton(
               backgroundColor: Colors.tealAccent[700],
@@ -192,7 +205,7 @@ class _CutiPageState extends State<CutiPage> {
                   context,
                   MaterialPageRoute(builder: (context) => const CutiForm()),
                 );
-                getData();
+                getData(); // Perbarui data setelah kembali
               },
               child: const Icon(Icons.add),
             )
@@ -200,6 +213,7 @@ class _CutiPageState extends State<CutiPage> {
     );
   }
 
+  // Widget untuk menampilkan informasi dalam bentuk chip
   Widget _infoChip(IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
