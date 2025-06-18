@@ -65,7 +65,7 @@ class Sidebar extends StatelessWidget {
                           ),
                           _buildListTile(
                             context,
-                            icon: Icons.accessible,
+                            icon: Icons.calendar_today, // ikon baru untuk Pengajuan Cuti
                             title: "Pengajuan Cuti",
                             destination: CutiPage(),
                           ),
