@@ -47,7 +47,6 @@ final String photoPath = (user?.id == 1 || user?.username == 'admin1')
               ),
               accountEmail: Text(
                 user?.role ?? "",
-                user?.role ?? "",
                 style: const TextStyle(color: Color(0xFFD0D5CE)),
               ),
               currentAccountPicture: CircleAvatar(
