@@ -38,7 +38,7 @@ class Sidebar extends StatelessWidget {
                 ),
               ),
               accountEmail: Text(
-                user?.username ?? "",
+                user?.role ?? "",
                 style: const TextStyle(color: Color(0xFFD0D5CE)),
               ),
               currentAccountPicture: const CircleAvatar(
@@ -68,12 +68,13 @@ class Sidebar extends StatelessWidget {
                             destination: const Beranda(),
                           ),
                           // Navigasi ke halaman cuti
-                          _buildListTile(
-                            context,
-                            icon: Icons.accessible,
-                            title: "Pengajuan Cuti",
-                            destination: const CutiPage(),
-                          ),
+                        _buildListTile(
+                          context,
+                          icon: Icons.calendar_today,
+                          title: "Pengajuan Cuti",
+                          destination: CutiPage(),
+                        ),
+
                           // Navigasi ke slip gaji
                           _buildListTile(
                             context,

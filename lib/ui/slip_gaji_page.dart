@@ -10,15 +10,45 @@ class SlipGajiPage extends StatefulWidget {
 }
 
 class _SlipGajiPageState extends State<SlipGajiPage> {
-  // Data dummy slip gaji karyawan
   final List<Map<String, dynamic>> dataKaryawan = [
-    {'nama': 'Bahrudin', 'username': 'bahrudin', 'gaji': 5000000.0},
-    {'nama': 'Cantika Ayu', 'username': 'Cantika Ayu', 'gaji': 5200000.0},
-    {'nama': 'Aditya S', 'username': 'Aditiya S', 'gaji': 4800000.0},
-    {'nama': 'Denis', 'username': 'denis', 'gaji': 5100000.0},
+    {
+      'nama': 'Bahrudin',
+      'username': 'bahrudin',
+      'gaji_pokok': 4000000.0,
+      'tunjangan': 500000.0,
+      'insentif': 800000.0,
+      'pph': 150000.0,
+      'bpjs': 100000.0,
+    },
+    {
+      'nama': 'Cantika Ayu',
+      'username': 'Cantika Ayu',
+      'gaji_pokok': 4100000.0,
+      'tunjangan': 600000.0,
+      'insentif': 900000.0,
+      'pph': 160000.0,
+      'bpjs': 100000.0,
+    },
+    {
+      'nama': 'Aditya S',
+      'username': 'Aditiya S',
+      'gaji_pokok': 3900000.0,
+      'tunjangan': 400000.0,
+      'insentif': 700000.0,
+      'pph': 140000.0,
+      'bpjs': 90000.0,
+    },
+    {
+      'nama': 'Denis',
+      'username': 'denis',
+      'gaji_pokok': 4000000.0,
+      'tunjangan': 550000.0,
+      'insentif': 850000.0,
+      'pph': 155000.0,
+      'bpjs': 95000.0,
+    },
   ];
 
-  // Data hasil filter berdasarkan role (admin/user)
   List<Map<String, dynamic>> filteredData = [];
 
   @override
@@ -27,68 +57,110 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
     filterData();
   }
 
-  // Fungsi filter data berdasarkan role login
   void filterData() {
     final isAdmin = UserInfo.role == 'admin';
     final username = UserInfo.username;
 
-    print('Logged in as: $username, role: ${UserInfo.role}');
-
     if (isAdmin) {
       filteredData = dataKaryawan;
     } else {
-      filteredData = dataKaryawan.where((k) {
-        return k['username'].toString().toLowerCase() ==
-            username?.toLowerCase();
-      }).toList();
+      filteredData = dataKaryawan
+          .where((k) =>
+              k['username'].toString().toLowerCase() ==
+              username?.toLowerCase())
+          .toList();
     }
 
     setState(() {});
   }
 
-  // Widget untuk menampilkan 1 kartu slip gaji
   Widget buildSlipCard(Map<String, dynamic> karyawan) {
+    double gajiPokok = karyawan['gaji_pokok'];
+    double tunjangan = karyawan['tunjangan'];
+    double insentif = karyawan['insentif'];
+    double pph = karyawan['pph'];
+    double bpjs = karyawan['bpjs'];
+
+    double totalPendapatan = gajiPokok + tunjangan + insentif;
+    double totalPotongan = pph + bpjs;
+    double gajiBersih = totalPendapatan - totalPotongan;
+
     return Container(
-      constraints: const BoxConstraints(
-        minWidth: 200,
-        maxWidth: 250,
-      ),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2E3A3F), Color(0xFF3C4B52)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(color: Colors.black38, blurRadius: 6, offset: Offset(2, 4)),
+        ],
         border: Border.all(color: Colors.white24),
       ),
-      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.account_circle, size: 40, color: Colors.white),
+          const Center(
+            child: Column(
+              children: [
+                Icon(Icons.receipt_long, size: 40, color: Colors.white70),
+                SizedBox(height: 8),
+                Text(
+                  'Slip Gaji Karyawan',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                Divider(thickness: 1, color: Colors.white24),
+              ],
+            ),
+          ),
           const SizedBox(height: 8),
-          const Text(
-            'Slip Gaji',
+          _buildRow('Nama Karyawan', karyawan['nama']),
+          const SizedBox(height: 12),
+          const Text('Pendapatan:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          _buildRow('Gaji Pokok', 'Rp ${gajiPokok.toStringAsFixed(0)}'),
+          _buildRow('Tunjangan', 'Rp ${tunjangan.toStringAsFixed(0)}'),
+          _buildRow('Insentif', 'Rp ${insentif.toStringAsFixed(0)}'),
+          const SizedBox(height: 12),
+          const Text('Potongan:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          _buildRow('PPh (Pajak Penghasilan)', '- Rp ${pph.toStringAsFixed(0)}'),
+          _buildRow('BPJS (Kesehatan & Ketenagakerjaan)', '- Rp ${bpjs.toStringAsFixed(0)}'),
+          const Divider(thickness: 1, color: Colors.white24),
+          _buildRow('Total Diterima', 'Rp ${gajiBersih.toStringAsFixed(0)}', isBold: true),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Text(
+              'PT. Naga Hytam',
+              style: TextStyle(color: Colors.grey.shade300),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRow(String label, String value, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+          Text(
+            value,
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
               color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            karyawan['nama'],
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Rp ${karyawan['gaji'].toStringAsFixed(0)}',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white70,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ],
@@ -102,53 +174,42 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
       drawer: const Sidebar(),
       appBar: AppBar(
         title: const Text(
-          'Slip Gaji PT. Naga Hytam',
+          'Slip Gaji PT. Naga Hytam Sejahter Abadi',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: Colors.black87,
+        elevation: 2,
         centerTitle: true,
-        automaticallyImplyLeading: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1F2C2C),
-              Color(0xFF3A4A4A),
-            ],
+            colors: [Color(0xFF101C1D), Color(0xFF1C2B2D)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         padding: const EdgeInsets.all(16.0),
-        child: filteredData.isEmpty
-            ? const Center(
-                child: Text(
-                  'Data slip gaji tidak tersedia.',
-                  style: TextStyle(color: Colors.white70),
+        child: filteredData.length == 1
+            ? Center(
+                child: SizedBox(
+                  width: 320,
+                  child: buildSlipCard(filteredData[0]),
                 ),
               )
-            : filteredData.length == 1
-                ? Center(
-                    child: SizedBox(
-                      width: 250,
-                      child: buildSlipCard(filteredData[0]),
-                    ),
-                  )
-                : GridView.builder(
-                    itemCount: filteredData.length,
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 300,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                    ),
-                    itemBuilder: (context, index) {
-                      return buildSlipCard(filteredData[index]);
-                    },
-                  ),
+            : GridView.builder(
+                itemCount: filteredData.length,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 380,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 3 / 4.5,
+                ),
+                itemBuilder: (context, index) {
+                  return buildSlipCard(filteredData[index]);
+                },
+              ),
       ),
     );
   }
