@@ -109,6 +109,7 @@ class Sidebar extends StatelessWidget {
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
+                        //matap
                         "©2025 Naga Hytam Sejahtera Abadi\nAll Rights Reserved.",
                         textAlign: TextAlign.center,
                         style: TextStyle(
