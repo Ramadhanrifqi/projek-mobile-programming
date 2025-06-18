@@ -65,9 +65,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
       filteredData = dataKaryawan;
     } else {
       filteredData = dataKaryawan
-          .where((k) =>
-              k['username'].toString().toLowerCase() ==
-              username?.toLowerCase())
+          .where((k) => k['username'].toString().toLowerCase() == username?.toLowerCase())
           .toList();
     }
 
@@ -88,9 +86,8 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-
         gradient: const LinearGradient(
-          colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
+          colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -99,7 +96,6 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
           BoxShadow(color: Colors.black38, blurRadius: 6, offset: Offset(2, 4)),
         ],
         border: Border.all(color: Colors.white24),
-
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,52 +103,49 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
           const Center(
             child: Column(
               children: [
-
                 Icon(Icons.receipt_long, size: 40, color: Color.fromARGB(179, 0, 0, 0)),
                 SizedBox(height: 8),
                 Text(
                   'Slip Gaji Karyawan',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 0, 0)),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
                 Divider(thickness: 1, color: Color.fromARGB(60, 0, 0, 0)),
-
               ],
             ),
           ),
-       const SizedBox(height: 8),
-_buildRow('Nama Karyawan', karyawan['nama'], textColor: Colors.black),
-const SizedBox(height: 12),
+          const SizedBox(height: 8),
+          _buildRow('Nama Karyawan', karyawan['nama'], textColor: Colors.black),
+          const SizedBox(height: 12),
 
-
-          const Text('Pendapatan:', style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 0, 0))),
-
+          const Text(
+            'Pendapatan:',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          ),
           _buildRow('Gaji Pokok', 'Rp ${gajiPokok.toStringAsFixed(0)}', textColor: Colors.black),
           _buildRow('Tunjangan', 'Rp ${tunjangan.toStringAsFixed(0)}', textColor: Colors.black),
           _buildRow('Insentif', 'Rp ${insentif.toStringAsFixed(0)}', textColor: Colors.black),
 
           const SizedBox(height: 12),
+          const Text(
+            'Potongan:',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+          _buildRow('PPh (Pajak Penghasilan)', '- Rp ${pph.toStringAsFixed(0)}', textColor: Colors.black),
+          _buildRow('BPJS (Kesehatan & Ketenagakerjaan)', '- Rp ${bpjs.toStringAsFixed(0)}', textColor: Colors.black),
 
-        const Text(
-  'Potongan:',
-  style: TextStyle(
-    fontWeight: FontWeight.bold,
-    color: Colors.black,
-  ),
-),
-_buildRow('PPh (Pajak Penghasilan)', '- Rp ${pph.toStringAsFixed(0)}', textColor: Colors.black),
-_buildRow('BPJS (Kesehatan & Ketenagakerjaan)', '- Rp ${bpjs.toStringAsFixed(0)}', textColor: Colors.black),
-const Divider(thickness: 1, color: Color.fromARGB(60, 0, 0, 0)),
-_buildRow('Total Diterima', 'Rp ${gajiBersih.toStringAsFixed(0)}', isBold: true, textColor: Colors.black),
-
+          const Divider(thickness: 1, color: Color.fromARGB(60, 0, 0, 0)),
+          _buildRow('Total Diterima', 'Rp ${gajiBersih.toStringAsFixed(0)}', isBold: true, textColor: Colors.black),
 
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.bottomRight,
             child: Text(
               'PT. Naga Hytam',
-
-              style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
-
+              style: TextStyle(color: Colors.black),
             ),
           )
         ],
@@ -160,33 +153,33 @@ _buildRow('Total Diterima', 'Rp ${gajiBersih.toStringAsFixed(0)}', isBold: true,
     );
   }
 
-  Widget _buildRow(String label, String value, {bool isBold = false, Color textColor = Colors.white}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4.0),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Flexible(
-          child: Text(
-            label,
+  Widget _buildRow(String label, String value,
+      {bool isBold = false, Color textColor = Colors.white}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: textColor,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+          Text(
+            value,
             style: TextStyle(
               color: textColor,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
           ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +196,6 @@ _buildRow('Total Diterima', 'Rp ${gajiBersih.toStringAsFixed(0)}', isBold: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
-
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF101C1D), Color(0xFF1C2B2D)],
@@ -211,8 +203,6 @@ _buildRow('Total Diterima', 'Rp ${gajiBersih.toStringAsFixed(0)}', isBold: true,
             end: Alignment.bottomCenter,
           ),
         ),
-
-  
         padding: const EdgeInsets.all(16.0),
         child: filteredData.length == 1
             ? Center(
