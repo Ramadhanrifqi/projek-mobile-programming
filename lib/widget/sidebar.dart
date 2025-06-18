@@ -13,11 +13,19 @@ class Sidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = UserInfo.user;
 
+// Logika pemilihan gambar profil
+final String photoPath = (user?.id == 1 || user?.username == 'admin1')
+    ? 'assets/images/images/martin.png'
+    : (user?.id == 4 || user?.username == 'Cantika Ayu')
+        ? 'assets/images/images/cantika.jpg'
+        : 'assets/images/images/profil_operator.jpg';
+
+
     return Drawer(
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF192524), Color(0xFF3C5759)], // gradasi gelap hazy
+            colors: [Color(0xFF192524), Color(0xFF3C5759)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -33,22 +41,21 @@ class Sidebar extends StatelessWidget {
                 user?.username ?? "Tidak diketahui",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFEFECE9), // soft white
+                  color: Color(0xFFEFECE9),
                 ),
               ),
               accountEmail: Text(
                 user?.username ?? "",
                 style: const TextStyle(color: Color(0xFFD0D5CE)),
               ),
-              currentAccountPicture: const CircleAvatar(
-                backgroundColor: Color(0xFFEFECE9),
-                child: Icon(Icons.person, size: 40, color: Color(0xFF3C5759)),
+              currentAccountPicture: CircleAvatar(
+                backgroundImage: AssetImage(photoPath),
               ),
             ),
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEFECE9), // soft beige untuk konten bawah
+                  color: Color(0xFFEFECE9),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(0)),
                 ),
                 child: Column(
@@ -65,7 +72,7 @@ class Sidebar extends StatelessWidget {
                           ),
                           _buildListTile(
                             context,
-                            icon: Icons.calendar_today, // ikon baru untuk Pengajuan Cuti
+                            icon: Icons.calendar_today,
                             title: "Pengajuan Cuti",
                             destination: CutiPage(),
                           ),
@@ -145,7 +152,7 @@ class Sidebar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFD1EBDB), // hijau mint terang
+              color: const Color(0xFFD1EBDB),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -157,7 +164,7 @@ class Sidebar extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, color: const Color(0xFF192524)), // ikon gelap
+                Icon(icon, color: const Color(0xFF192524)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
