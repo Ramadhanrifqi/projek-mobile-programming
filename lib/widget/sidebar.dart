@@ -105,7 +105,7 @@ class Sidebar extends StatelessWidget {
                       ),
                     ),
 
-                    // Footer hak cipta
+                    // Footer hak cipta kita
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
