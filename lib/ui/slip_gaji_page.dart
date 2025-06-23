@@ -190,7 +190,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
           'Slip Gaji PT. Naga Hytam Sejahter Abadi',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.black87,
+        backgroundColor: Color(0xFF101C1D),
         elevation: 2,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),

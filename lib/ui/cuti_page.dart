@@ -14,17 +14,14 @@ class CutiPage extends StatefulWidget {
 }
 
 class _CutiPageState extends State<CutiPage> {
-  // Menyimpan daftar cuti yang ditampilkan
   List<Cuti> _cutiList = [];
 
   @override
   void initState() {
     super.initState();
-    // Memuat data saat halaman dibuka
     getData();
   }
 
-  // Mengambil data cuti dari service dan filter berdasarkan role
   Future<void> getData() async {
     List<Cuti> data = await CutiService().listData();
     final isAdmin = UserInfo.role == 'admin';
@@ -37,10 +34,9 @@ class _CutiPageState extends State<CutiPage> {
     });
   }
 
-  // Fungsi untuk menghapus data cuti
   Future<void> _deleteCuti(id) async {
     await CutiService().hapus(id);
-    getData(); // Perbarui data setelah penghapusan
+    getData();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Data berhasil dihapus')),
     );
@@ -51,7 +47,7 @@ class _CutiPageState extends State<CutiPage> {
     final isAdmin = UserInfo.role == 'admin';
 
     return Scaffold(
-      drawer: const Sidebar(), // Drawer navigasi
+      drawer: const Sidebar(),
       backgroundColor: const Color(0xFF0F2027),
       appBar: AppBar(
         title: const Text('Data Cuti', style: TextStyle(color: Colors.white)),
@@ -70,7 +66,7 @@ class _CutiPageState extends State<CutiPage> {
           ),
         ),
         child: RefreshIndicator(
-          onRefresh: getData, // Tarik untuk refresh
+          onRefresh: getData,
           child: _cutiList.isEmpty
               ? const Center(
                   child: Text(
@@ -83,6 +79,9 @@ class _CutiPageState extends State<CutiPage> {
                   itemCount: _cutiList.length,
                   itemBuilder: (context, index) {
                     final cuti = _cutiList[index];
+                    final isPending = cuti.status == 'Pending';
+                    final isOwner = cuti.ajukanCuti == UserInfo.username;
+
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
@@ -104,7 +103,6 @@ class _CutiPageState extends State<CutiPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Menampilkan nama pengaju cuti
                           Row(
                             children: [
                               const Icon(Icons.person, color: Colors.white70),
@@ -120,8 +118,6 @@ class _CutiPageState extends State<CutiPage> {
                             ],
                           ),
                           const SizedBox(height: 12),
-
-                          // Informasi cuti
                           Wrap(
                             spacing: 10,
                             runSpacing: 6,
@@ -137,12 +133,12 @@ class _CutiPageState extends State<CutiPage> {
                           ),
                           const SizedBox(height: 12),
 
-                          // Aksi hanya untuk admin: Edit & Hapus
-                          if (isAdmin)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                // Tombol edit
+                          // Aksi tombol
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              // ADMIN: edit hanya jika status masih Pending
+                              if (isAdmin && isPending)
                                 IconButton(
                                   icon: const Icon(Icons.edit,
                                       color: Colors.lightBlueAccent),
@@ -156,7 +152,9 @@ class _CutiPageState extends State<CutiPage> {
                                     ).then((_) => getData());
                                   },
                                 ),
-                                // Tombol hapus dengan konfirmasi
+
+                              // USER: bisa hapus jika bukan pending dan milik sendiri
+                              if (!isAdmin && isOwner && !isPending)
                                 IconButton(
                                   icon: const Icon(Icons.delete,
                                       color: Colors.redAccent),
@@ -165,8 +163,8 @@ class _CutiPageState extends State<CutiPage> {
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title: const Text("Konfirmasi"),
-                                        content:
-                                            const Text("Hapus data ini?"),
+                                        content: const Text(
+                                            "Hapus cuti yang sudah diproses?"),
                                         actions: [
                                           TextButton(
                                             onPressed: () =>
@@ -185,8 +183,8 @@ class _CutiPageState extends State<CutiPage> {
                                     );
                                   },
                                 ),
-                              ],
-                            ),
+                            ],
+                          ),
                         ],
                       ),
                     );
@@ -195,7 +193,7 @@ class _CutiPageState extends State<CutiPage> {
         ),
       ),
 
-      // Tombol tambah cuti hanya muncul jika bukan admin
+      // Tombol tambah cuti hanya untuk user
       floatingActionButton: UserInfo.role != 'admin'
           ? FloatingActionButton(
               backgroundColor: Colors.tealAccent[700],
@@ -205,7 +203,7 @@ class _CutiPageState extends State<CutiPage> {
                   context,
                   MaterialPageRoute(builder: (context) => const CutiForm()),
                 );
-                getData(); // Perbarui data setelah kembali
+                getData();
               },
               child: const Icon(Icons.add),
             )
@@ -213,7 +211,6 @@ class _CutiPageState extends State<CutiPage> {
     );
   }
 
-  // Widget untuk menampilkan informasi dalam bentuk chip
   Widget _infoChip(IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -227,10 +224,7 @@ class _CutiPageState extends State<CutiPage> {
         children: [
           Icon(icon, color: Colors.tealAccent[100], size: 18),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white70),
-          ),
+          Text(label, style: const TextStyle(color: Colors.white70)),
         ],
       ),
     );
