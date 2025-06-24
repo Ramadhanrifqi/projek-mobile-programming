@@ -80,7 +80,6 @@ class _BerandaState extends State<Beranda> {
                       ),
                       child: Column(
                         children: [
-                          // Foto profil dinamis berdasarkan username
                           Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
@@ -126,6 +125,39 @@ class _BerandaState extends State<Beranda> {
                   ),
                 ),
               ),
+
+              // ✅ TOMBOL TAMBAH DAN LIHAT KARYAWAN HANYA UNTUK ADMIN
+              if (role == 'admin') ...[
+                const SizedBox(height: 30),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/tambah-karyawan');
+                  },
+                  icon: const Icon(Icons.person_add),
+                  label: const Text("Tambah Karyawan"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/data-karyawan');
+                  },
+                  icon: const Icon(Icons.list_alt),
+                  label: const Text("Lihat Data Karyawan"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+
               const Spacer(),
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
