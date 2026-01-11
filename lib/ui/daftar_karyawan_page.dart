@@ -50,9 +50,29 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
             onPressed: () async {
               Navigator.pop(context);
               await deleteUser(user.id!);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Berhasil menghapus ${user.username}')),
+
+              // Notifikasi berhasil hapus
+              final snackBar = SnackBar(
+                backgroundColor: Colors.green[600]?.withOpacity(0.95),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                duration: const Duration(seconds: 2),
+                content: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Berhasil menghapus ${user.username}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
               );
+
+              ScaffoldMessenger.of(context).showSnackBar(snackBar);
             },
             child: const Text('Hapus'),
           ),
