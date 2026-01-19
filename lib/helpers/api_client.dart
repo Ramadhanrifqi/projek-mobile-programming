@@ -2,10 +2,14 @@ import 'package:dio/dio.dart';
 
 // Inisialisasi instance Dio dengan konfigurasi dasar
 final Dio dio = Dio(BaseOptions(
-  baseUrl: 'https://681b025517018fe5057980fa.mockapi.io/', // Ganti sesuai baseURL kamu
+  // Untuk Browser, gunakan localhost
+  baseUrl: 'http://localhost:8000/api/', 
   connectTimeout: 5000,
   receiveTimeout: 3000,
-  headers: {'Content-Type': 'application/json'},
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
 ));
 
 class ApiClient {

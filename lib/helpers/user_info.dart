@@ -5,9 +5,11 @@ class UserInfo {
   static User? loginUser;
 
   // Method untuk menyetel data user yang sedang login
-  static void setUser(User user) {
-    loginUser = user;
-  }
+static void setUser(User user) {
+  loginUser = user;
+  print("Role user saat ini: ${user.role}"); // Cek di Debug Console
+}
+  bool isAdmin = UserInfo.role?.toLowerCase() == 'admin';
 
   // Getter untuk mengambil objek User yang sedang login
   static User? get user => loginUser;
@@ -19,5 +21,5 @@ class UserInfo {
   static String? get userId => loginUser?.id;
 
   // Getter untuk mengambil username dari user
-  static String? get username => loginUser?.username;
+  static String? get username => loginUser?.email;
 }

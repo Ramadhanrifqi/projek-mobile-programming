@@ -1,18 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../service/login_service.dart';
-import '../model/user.dart';
 import '../helpers/user_info.dart';
 import 'beranda.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Menyimpan data login ke SharedPreferences
-Future<void> saveUserInfo(String username, String role) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('username', username);
-  await prefs.setString('role', role);
-}
-
-// Halaman Login
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -21,33 +13,51 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _usernameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isObscure = true;
 
-  // Fungsi yang dijalankan saat tombol login ditekan
+  // ✅ Fungsi simpan data lengkap ke SharedPreferences
+  Future<void> saveUserInfo(String name, String role, String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', name);      
+    await prefs.setString('role', role);      
+    await prefs.setString('email', email);    
+  }
+
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
+      // Menampilkan loading indikator sederhana
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB))),
+      );
+
       final user = await LoginService().login(
-        _usernameCtrl.text,
+        _emailCtrl.text,
         _passwordCtrl.text,
       );
 
+      if (!mounted) return;
+      Navigator.pop(context); // Tutup loading
+
       if (user != null) {
         UserInfo.setUser(user);
-        if (!mounted) return;
-        await saveUserInfo(user.username, user.role);
+        await saveUserInfo(user.name ?? '', user.role, user.email);
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const Beranda(),
-          ),
+          MaterialPageRoute(builder: (context) => const Beranda()),
         );
       } else {
-        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login gagal!')),
+          const SnackBar(
+            content: Text('Email atau Password salah!'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -57,135 +67,97 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF3C5759),
-              Color(0xFF192524),
-            ],
+            colors: [Color(0xFF3C5759), Color(0xFF192524)],
           ),
         ),
         child: Center(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Card(
-                elevation: 8,
-                color: const Color(0xFFD0D5CE).withOpacity(0.25),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: Colors.white.withOpacity(0.4),
-                    width: 1.5,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          height: 100,
-                          child: Image.asset(
-                            'assets/images/images/Logo.naga.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          "PT. NAGA HYTAM SEJAHTERA ABADI",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFF5F5F5),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          "Sistem Manajemen Perusahaan",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFFF5F5F5),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        const SizedBox(height: 16),
-                        const Text(
-                          "Login",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFF5F5F5),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Form(
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                controller: _usernameCtrl,
-                                decoration: InputDecoration(
-                                  labelText: "Username",
-                                  prefixIcon: const Icon(Icons.person, color: Color(0xFF3C5759)),
-                                  labelStyle: const TextStyle(color: Color(0xFF3C5759)),
-                                  filled: true,
-                                  fillColor: const Color(0xFFD1EBDB),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
+              padding: const EdgeInsets.all(24),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Logo dengan bayangan halus
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
                                 ),
-                                validator: (value) =>
-                                    value!.isEmpty ? 'Wajib diisi' : null,
-                              ),
-                              const SizedBox(height: 20),
-                              TextFormField(
-                                controller: _passwordCtrl,
-                                obscureText: true,
-                                decoration: InputDecoration(
-                                  labelText: "Password",
-                                  prefixIcon: const Icon(Icons.lock, color: Color(0xFF3C5759)),
-                                  labelStyle: const TextStyle(color: Color(0xFF3C5759)),
-                                  filled: true,
-                                  fillColor: const Color(0xFFD1EBDB),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                validator: (value) =>
-                                    value!.isEmpty ? 'Wajib diisi' : null,
-                              ),
-                              const SizedBox(height: 30),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _handleLogin,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF3C5759),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      side: BorderSide(
-                                        color: Colors.white,
-                                        width: 1.5,
-                                      ),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  child: const Text("Masuk"),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Image.asset('assets/images/images/Logo.naga.png', height: 100),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 24),
+                          const Text(
+                            "Selamat Datang",
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.2),
+                          ),
+                          const Text(
+                            "Silakan masuk ke akun Anda",
+                            style: TextStyle(fontSize: 14, color: Colors.white70),
+                          ),
+                          const SizedBox(height: 32),
+                          
+                          // Input Email
+                          _buildTextField(
+                            controller: _emailCtrl,
+                            label: "Email",
+                            icon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          // Input Password
+                          _buildTextField(
+                            controller: _passwordCtrl,
+                            label: "Password",
+                            icon: Icons.lock_outline,
+                            isPassword: true,
+                            obscureText: _isObscure,
+                            toggleVisibility: () => setState(() => _isObscure = !_isObscure),
+                          ),
+                          const SizedBox(height: 32),
+                          
+                          // Tombol Login
+                          SizedBox(
+                            width: double.infinity,
+                            height: 55,
+                            child: ElevatedButton(
+                              onPressed: _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFD1EBDB),
+                                foregroundColor: const Color(0xFF192524),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                              ),
+                              child: const Text("MASUK", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -194,6 +166,53 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? toggleVisibility,
+    TextInputType? keyboardType,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        prefixIcon: Icon(icon, color: const Color(0xFFD1EBDB)),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility, color: Colors.white70),
+                onPressed: toggleVisibility,
+              )
+            : null,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.05),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Color(0xFFD1EBDB)),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Colors.redAccent),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: Colors.redAccent),
+        ),
+      ),
+      validator: (v) => v!.isEmpty ? '$label wajib diisi' : null,
     );
   }
 }

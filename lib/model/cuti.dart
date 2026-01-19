@@ -1,54 +1,34 @@
 class Cuti {
-  // ID unik untuk setiap cuti (opsional, bisa null jika belum dibuat)
   String? id;
+  String? ajukanCuti;
+  String? tanggalMulai;
+  String? tanggalSelesai;
+  String? alasan;
+  String? status;
 
-  // Nama atau informasi pengajuan cuti
-  String ajukanCuti;
+  Cuti({this.id, this.ajukanCuti, this.tanggalMulai, this.tanggalSelesai, this.alasan, this.status});
 
-  // Tanggal mulai cuti
-  String tanggalMulai;
+  // lib/model/cuti.dart
 
-  // Tanggal selesai cuti
-  String tanggalSelesai;
+  factory Cuti.fromJson(Map<String, dynamic> json) {
+    return Cuti(
+      // Mengambil id_cuti karena di database Anda menggunakan id_cuti
+      id: json['id_cuti']?.toString(), 
+      ajukanCuti: json['nama'], 
+      tanggalMulai: json['tanggalMulai'] ?? json['tanggal_mulai'],
+      tanggalSelesai: json['tanggalSelesai'] ?? json['tanggal_selesai'],
+      alasan: json['alasan'],
+      // Mengantisipasi S besar atau s kecil dari API Laravel
+      status: (json['Status'] ?? json['status'])?.toString(), 
+    );
+  }
 
-  // Alasan pengajuan cuti
-  String alasan;
-
-  // Status cuti: "Pending", "Disetujui", atau "Ditolak"
-  String status;
-
-  // ID user yang mengajukan cuti
-  String userId;
-
-  // Konstruktor utama untuk membuat objek Cuti
-  Cuti({
-    this.id,
-    required this.ajukanCuti,
-    required this.tanggalMulai,
-    required this.tanggalSelesai,
-    required this.alasan,
-    required this.status,
-    required this.userId,
-  });
-
-  // Factory method untuk membuat objek Cuti dari data JSON
-  factory Cuti.fromJson(Map<String, dynamic> json) => Cuti(
-        id: json['id'],
-        ajukanCuti: json['ajukanCuti'],
-        tanggalMulai: json['tanggalMulai'],
-        tanggalSelesai: json['tanggalSelesai'],
-        alasan: json['alasan'],
-        status: json['status'],
-        userId: json['userId'],
-      );
-
-  // Method untuk mengubah objek Cuti menjadi format JSON (Map)
   Map<String, dynamic> toJson() => {
-        "ajukanCuti": ajukanCuti,
+        "nama": ajukanCuti, 
         "tanggalMulai": tanggalMulai,
         "tanggalSelesai": tanggalSelesai,
         "alasan": alasan,
-        "status": status,
-        "userId": userId,
+        // PERBAIKAN: Gunakan "Status" (S besar) agar sesuai dengan kolom Database Anda
+        "Status": status, 
       };
 }

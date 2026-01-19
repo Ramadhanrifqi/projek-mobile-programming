@@ -1,45 +1,49 @@
-import 'package:dio/dio.dart';
-import '/helpers/api_client.dart';
+import '../helpers/api_client.dart';
 import '../model/cuti.dart';
 
 class CutiService {
-  // Mengambil semua data cuti dari API dan mengubahnya menjadi List<Cuti>
+  // Ambil semua data cuti
   Future<List<Cuti>> listData() async {
-    final Response response = await ApiClient().get('cuti');
-    final List data = response.data as List;
-    List<Cuti> result = data.map((json) => Cuti.fromJson(json)).toList();
-    return result;
+    final response = await ApiClient().get('cuti');
+    final List data = response.data;
+    return data.map((json) => Cuti.fromJson(json)).toList();
   }
 
-  // Menyimpan data cuti baru ke API
-  Future<Cuti> simpan(Cuti cuti) async {
-    var data = cuti.toJson();
-    final Response response = await ApiClient().post('cuti', data);
-    Cuti result = Cuti.fromJson(response.data);
-    return result;
+Future simpan(Cuti cuti) async {
+  // Pastikan path-nya benar (misal: 'cuti' atau 'api/cuti')
+  // cuti.toJson() sekarang akan otomatis mengirim "Status": "Pending"
+  final response = await ApiClient().post('cuti', cuti.toJson());
+  return response;
+}
+// Pastikan fungsi menerima dua parameter: objek Cuti dan String id
+Future ubah(Cuti cuti, String id) async {
+  try {
+    // Mengirim data ke endpoint Laravel api/cuti/{id}
+    final response = await ApiClient().put('cuti/$id', cuti.toJson());
+    return response;
+  } catch (e) {
+    throw Exception("Gagal update data: $e");
+  }
+}
+  // ✅ Hapus pengajuan cuti
+  Future hapus(String id) async {
+    // Pastikan ID ini berisi nilai dari kolom id_cuti
+    final response = await ApiClient().delete('cuti/$id');
+    return response.data;
   }
 
-  // Mengubah data cuti yang sudah ada berdasarkan ID
-  Future<Cuti> ubah(Cuti cuti, String id) async {
-    var data = cuti.toJson();
-    final Response response = await ApiClient().put('cuti/${id}', data);
-    print(response);
-    Cuti result = Cuti.fromJson(response.data);
-    return result;
-  }
-
-  // Mengambil detail data cuti berdasarkan ID
-  Future<Cuti> getById(String id) async {
-    final Response response = await ApiClient().get('cuti/${id}');
-    Cuti result = Cuti.fromJson(response.data);
-    return result;
-  }
-
-  // Menghapus data cuti berdasarkan ID
-  Future<void> hapus(String id) async {
-    final Response response = await ApiClient().delete('cuti/$id');
-    if (response.statusCode != 200) {
-      throw Exception('Gagal menghapus data');
+  // ✅ FUNGSI RESET JATAH CUTI TAHUNAN (KHUSUS ADMIN)
+  Future<bool> resetCutiSemua() async {
+    try {
+      final response = await ApiClient().get('cuti/reset-tahunan');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Error Reset Cuti: $e");
+      return false;
     }
   }
 }

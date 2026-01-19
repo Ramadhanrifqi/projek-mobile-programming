@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../model/cuti.dart';
 import '../service/cuti_service.dart';
 import '../helpers/user_info.dart';
@@ -11,93 +13,98 @@ class CutiForm extends StatefulWidget {
 }
 
 class _CutiFormState extends State<CutiForm> {
-  // Key untuk validasi form
   final _formKey = GlobalKey<FormState>();
-
-  // Controller untuk input field
-  final _namaCtrl = TextEditingController();
+  
+  final _namaLengkapCtrl = TextEditingController();
   final _tanggalMulaiCtrl = TextEditingController();
   final _tanggalSelesaiCtrl = TextEditingController();
   final _alasanCtrl = TextEditingController();
 
-  // Menyimpan ID user yang login
-  String? _userId;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
+    _loadInitialData();
+  }
 
-    // Ambil data user yang login dari UserInfo
-    final user = UserInfo.user;
-    if (user != null) {
-      _namaCtrl.text = user.username ?? '';
-      _userId = user.id;
-    }
+  Future<void> _loadInitialData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _namaLengkapCtrl.text = prefs.getString('name') ?? 'User';
+    });
+  }
+
+  void _showSnackBar(String message, {Color color = Colors.redAccent}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color, duration: const Duration(seconds: 2)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F2027),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Tambah Cuti", style: TextStyle(color: Colors.white)),
+        title: const Text("Pengajuan Cuti", 
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        automaticallyImplyLeading: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16.0),
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
           ),
         ),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white24),
-            ),
-            width: 420,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Ikon dan judul form
-                  const Icon(Icons.calendar_today, size: 40, color: Colors.white),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Formulir Pengajuan Cuti',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.send_rounded, size: 60, color: Color(0xFFD1EBDB)),
+                          const SizedBox(height: 16),
+                          const Text('Buat Pengajuan Baru', 
+                            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 32),
+                          
+                          _buildModernField(_namaLengkapCtrl, "Nama Pegawai", Icons.person_outline, readOnly: true),
+                          const SizedBox(height: 16),
+                          _buildDateField(_tanggalMulaiCtrl, "Tanggal Mulai", Icons.calendar_today_outlined),
+                          const SizedBox(height: 16),
+                          _buildDateField(_tanggalSelesaiCtrl, "Tanggal Selesai", Icons.calendar_month_outlined),
+                          const SizedBox(height: 16),
+                          _buildModernField(_alasanCtrl, "Alasan Cuti", Icons.description_outlined, maxLines: 3),
+                          const SizedBox(height: 32),
+                          
+                          _isSaving 
+                            ? const CircularProgressIndicator(color: Color(0xFFD1EBDB)) 
+                            : _buildSubmitButton(),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-
-                  // Input field
-                  _styledField(_fieldNama()),
-                  const SizedBox(height: 16),
-                  _styledField(_fieldTanggalMulai()),
-                  const SizedBox(height: 16),
-                  _styledField(_fieldTanggalSelesai()),
-                  const SizedBox(height: 16),
-                  _styledField(_fieldAlasan()),
-
-                  const SizedBox(height: 24),
-
-                  // Tombol Simpan
-                  _tombolSimpan(),
-                ],
+                ),
               ),
             ),
           ),
@@ -106,152 +113,138 @@ class _CutiFormState extends State<CutiForm> {
     );
   }
 
-  // Widget pembungkus untuk styling field
-  Widget _styledField(Widget child) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        inputDecorationTheme: InputDecorationTheme(
-          labelStyle: const TextStyle(color: Colors.white70),
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.05),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.white24),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.tealAccent),
-          ),
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity, 
+      height: 55,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFD1EBDB), 
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
         ),
-      ),
-      child: child,
-    );
-  }
+        onPressed: () async {
+          if (_formKey.currentState!.validate()) {
+            setState(() => _isSaving = true);
+            
+            try {
+              // Menghilangkan jam agar formatnya murni YYYY-MM-DD
+              String tglMulaiStr = _tanggalMulaiCtrl.text.trim();
+              String tglSelesaiStr = _tanggalSelesaiCtrl.text.trim();
 
-  // Field Nama Pegawai (readonly)
-  Widget _fieldNama() {
-    return TextFormField(
-      controller: _namaCtrl,
-      readOnly: true,
-      style: const TextStyle(color: Colors.white),
-      decoration: const InputDecoration(labelText: "Nama Pegawai"),
-    );
-  }
+              DateTime mulai = DateTime.parse(tglMulaiStr);
+              DateTime selesai = DateTime.parse(tglSelesaiStr);
+              DateTime sekarang = DateTime.now();
+              DateTime hariIni = DateTime(sekarang.year, sekarang.month, sekarang.day);
 
-  // Field Tanggal Mulai (dengan date picker)
-  Widget _fieldTanggalMulai() {
-    return TextFormField(
-      controller: _tanggalMulaiCtrl,
-      readOnly: true,
-      style: const TextStyle(color: Colors.white),
-      decoration: const InputDecoration(labelText: "Tanggal Mulai"),
-      onTap: () async {
-        DateTime? picked = await showDatePicker(
-          context: context,
-          initialDate: DateTime.now(),
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2100),
-        );
-        if (picked != null) {
-          _tanggalMulaiCtrl.text = picked.toIso8601String().split('T').first;
-        }
-      },
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'Wajib diisi';
-        try {
-          DateTime.parse(value);
-        } catch (_) {
-          return 'Format tanggal salah (yyyy-mm-dd)';
-        }
-        return null;
-      },
-    );
-  }
+              // Validasi Bisnis
+              if (mulai.difference(hariIni).inDays < 7) {
+                _showSnackBar("Pengajuan cuti minimal 1 minggu sebelum hari-H");
+                setState(() => _isSaving = false);
+                return;
+              }
 
-  // Field Tanggal Selesai (dengan date picker)
-  Widget _fieldTanggalSelesai() {
-    return TextFormField(
-      controller: _tanggalSelesaiCtrl,
-      readOnly: true,
-      style: const TextStyle(color: Colors.white),
-      decoration: const InputDecoration(labelText: "Tanggal Selesai"),
-      onTap: () async {
-        DateTime? picked = await showDatePicker(
-          context: context,
-          initialDate: DateTime.now(),
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2100),
-        );
-        if (picked != null) {
-          _tanggalSelesaiCtrl.text = picked.toIso8601String().split('T').first;
-        }
-      },
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'Wajib diisi';
-        try {
-          DateTime.parse(value);
-        } catch (_) {
-          return 'Format tanggal salah (yyyy-mm-dd)';
-        }
-        return null;
-      },
-    );
-  }
+              int durasi = selesai.difference(mulai).inDays + 1;
+              if (durasi > 4) {
+                _showSnackBar("Sekali pengajuan maksimal hanya boleh 4 hari");
+                setState(() => _isSaving = false);
+                return;
+              }
 
-  // Field Alasan Cuti
-  Widget _fieldAlasan() {
-    return TextFormField(
-      controller: _alasanCtrl,
-      maxLines: 3,
-      style: const TextStyle(color: Colors.white),
-      decoration: const InputDecoration(labelText: "Alasan"),
-      validator: (value) => value == null || value.isEmpty ? "Wajib diisi" : null,
-    );
-  }
+              if (selesai.isBefore(mulai)) {
+                _showSnackBar("Tanggal selesai tidak boleh sebelum tanggal mulai");
+                setState(() => _isSaving = false);
+                return;
+              }
 
-  // Tombol untuk menyimpan pengajuan cuti
-  Widget _tombolSimpan() {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.tealAccent[700],
-        foregroundColor: Colors.black,
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      onPressed: () async {
-        if (_formKey.currentState!.validate()) {
-          // Validasi tambahan: tanggal selesai tidak boleh sebelum tanggal mulai
-          DateTime mulai = DateTime.parse(_tanggalMulaiCtrl.text);
-          DateTime selesai = DateTime.parse(_tanggalSelesaiCtrl.text);
+              // Mapping data ke model Cuti
+              Cuti cuti = Cuti(
+                ajukanCuti: UserInfo.username, // Mengirim email login ke Laravel
+                tanggalMulai: tglMulaiStr,
+                tanggalSelesai: tglSelesaiStr,
+                alasan: _alasanCtrl.text,
+                status: 'Pending',
+              );
 
-          if (selesai.isBefore(mulai)) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Tanggal selesai tidak boleh sebelum tanggal mulai")),
-            );
-            return;
+              // Eksekusi Simpan
+              await CutiService().simpan(cuti).then((value) {
+                _showSnackBar("Pengajuan Berhasil Dikirim", color: Colors.green);
+                Future.delayed(const Duration(seconds: 1), () {
+                  if (mounted) Navigator.pop(context, true);
+                });
+              });
+
+            } catch (e) {
+              debugPrint("ERROR_SIMPAN: $e");
+              _showSnackBar("Terjadi kesalahan koneksi atau format data");
+            } finally {
+              if (mounted) setState(() => _isSaving = false);
+            }
           }
+        },
+        child: const Text("KIRIM PENGAJUAN", 
+          style: TextStyle(color: Color(0xFF192524), fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
 
-          // Membuat objek Cuti baru dan menyimpannya
-          Cuti cuti = Cuti(
-            ajukanCuti: _namaCtrl.text,
-            tanggalMulai: _tanggalMulaiCtrl.text,
-            tanggalSelesai: _tanggalSelesaiCtrl.text,
-            alasan: _alasanCtrl.text,
-            status: 'Pending',
-            userId: _userId ?? '',
-          );
-
-          await CutiService().simpan(cuti).then((value) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Data berhasil disimpan")),
+  Widget _buildDateField(TextEditingController ctrl, String label, IconData icon) {
+    return TextFormField(
+      controller: ctrl, 
+      readOnly: true, 
+      style: const TextStyle(color: Colors.white),
+      decoration: _inputDecoration(label, icon),
+      onTap: () async {
+        DateTime? picked = await showDatePicker(
+          context: context, 
+          initialDate: DateTime.now().add(const Duration(days: 7)),
+          firstDate: DateTime.now(), 
+          lastDate: DateTime(2100),
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.dark(
+                  primary: Color(0xFFD1EBDB),
+                  onPrimary: Color(0xFF192524),
+                  surface: Color(0xFF203A43),
+                ),
+              ),
+              child: child!,
             );
-            Navigator.pop(context); // Kembali ke halaman sebelumnya
+          },
+        );
+        if (picked != null) {
+          setState(() {
+            // Format YYYY-MM-DD
+            ctrl.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
           });
         }
       },
-      child: const Text("Simpan", style: TextStyle(fontWeight: FontWeight.bold)),
+      validator: (v) => v == null || v.isEmpty ? "$label wajib diisi" : null,
+    );
+  }
+
+  Widget _buildModernField(TextEditingController ctrl, String label, IconData icon, {bool readOnly = false, int maxLines = 1}) {
+    return TextFormField(
+      controller: ctrl, 
+      readOnly: readOnly, 
+      maxLines: maxLines, 
+      style: const TextStyle(color: Colors.white),
+      decoration: _inputDecoration(label, icon),
+      validator: (v) => v == null || v.isEmpty ? "$label wajib diisi" : null,
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label, 
+      labelStyle: const TextStyle(color: Colors.white70),
+      prefixIcon: Icon(icon, color: const Color(0xFFD1EBDB), size: 20),
+      filled: true, 
+      fillColor: Colors.white.withOpacity(0.05),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFD1EBDB))),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.redAccent)),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.redAccent)),
     );
   }
 }

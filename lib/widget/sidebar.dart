@@ -5,6 +5,7 @@ import '../ui/cuti_page.dart';
 import '../helpers/user_info.dart';
 import '../ui/slip_gaji_page.dart';
 import '../ui/data_shift_page.dart';
+import '../ui/changepasswordpage.dart'; // Import halaman ganti password baru
 
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
@@ -31,7 +32,7 @@ class Sidebar extends StatelessWidget {
                 color: Colors.transparent,
               ),
               accountName: Text(
-                user?.username ?? "Tidak diketahui",
+                user?.name ?? "Tidak diketahui",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Color(0xFFEFECE9),
@@ -46,7 +47,7 @@ class Sidebar extends StatelessWidget {
               currentAccountPicture: CircleAvatar(
                 backgroundColor: const Color(0xFFEFECE9),
                 backgroundImage: AssetImage(
-                  'assets/images/images/${user?.username?.isNotEmpty == true ? user!.username : 'Foto.default'}.png',
+                  'assets/images/images/${user?.name?.isNotEmpty == true ? user!.name : 'Foto.default'}.png',
                 ),
               ),
             ),
@@ -90,6 +91,14 @@ class Sidebar extends StatelessWidget {
                             title: "Data Shift",
                             destination: const DataShiftPage(),
                           ),
+                          // --- TAMBAHAN MENU GANTI PASSWORD ---
+                          _buildListTile(
+                            context,
+                            icon: Icons.lock_reset_rounded,
+                            title: "Ganti Password",
+                            destination: const ChangePasswordPage(),
+                          ),
+                          // ------------------------------------
                           _buildListTile(
                             context,
                             icon: Icons.logout_rounded,
@@ -149,7 +158,7 @@ class Sidebar extends StatelessWidget {
           onTap: onTap ??
               () {
                 if (destination != null) {
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Tutup Drawer
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => destination),

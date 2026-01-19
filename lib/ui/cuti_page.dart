@@ -1,6 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../service/cuti_service.dart';
+import '../service/user_service.dart';
 import '../model/cuti.dart';
+import '../model/user.dart';
 import '../helpers/user_info.dart';
 import '../widget/sidebar.dart';
 import 'cuti_form.dart';
@@ -15,6 +18,8 @@ class CutiPage extends StatefulWidget {
 
 class _CutiPageState extends State<CutiPage> {
   List<Cuti> _cutiList = [];
+  List<User> _allUsers = []; 
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -23,210 +28,202 @@ class _CutiPageState extends State<CutiPage> {
   }
 
   Future<void> getData() async {
-    List<Cuti> data = await CutiService().listData();
-    final isAdmin = UserInfo.role == 'admin';
-    final username = UserInfo.username;
+    try {
+      setState(() => _isLoading = true);
+      _allUsers = await UserService().getAllUsers();
+      List<Cuti> data = await CutiService().listData();
+      
+      final isAdmin = UserInfo.role?.toLowerCase() == 'admin';
 
-    setState(() {
-      _cutiList = isAdmin
-          ? data
-          : data.where((cuti) => cuti.ajukanCuti == username).toList();
-    });
+      setState(() {
+        _cutiList = isAdmin 
+            ? data 
+            : data.where((cuti) {
+                return cuti.ajukanCuti?.toLowerCase().trim() == 
+                       UserInfo.username?.toLowerCase().trim();
+              }).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      debugPrint("Gagal memuat data: $e");
+    }
   }
 
-  Future<void> _deleteCuti(id) async {
-    await CutiService().hapus(id);
-    getData();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Data berhasil dihapus')),
+  void _konfirmasiResetJatah() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF203A43),
+        title: const Text("Peringatan Reset!", style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
+        content: const Text(
+          "Tindakan ini akan mengembalikan jatah cuti semua karyawan ke 14 hari DAN MENGHAPUS SELURUH RIWAYAT pengajuan cuti. Anda yakin?",
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal")),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              setState(() => _isLoading = true);
+              try {
+                bool success = await CutiService().resetCutiSemua(); 
+                if (success) {
+                  _showSnackBar("Jatah direset & riwayat dikosongkan!", Colors.green);
+                  getData(); 
+                } else {
+                  _showSnackBar("Gagal mereset data", Colors.redAccent);
+                }
+              } catch (e) {
+                _showSnackBar("Terjadi kesalahan: $e", Colors.redAccent);
+              } finally {
+                setState(() => _isLoading = false);
+              }
+            },
+            child: const Text("Ya, Reset & Hapus", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
+  }
+
+  void _konfirmasiHapus(Cuti cuti) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF203A43),
+        title: const Text("Hapus Pengajuan", style: TextStyle(color: Colors.white)),
+        content: const Text("Apakah Anda yakin ingin menghapus data ini?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal")),
+          TextButton(
+            onPressed: () async {
+              if (cuti.id != null) {
+                Navigator.pop(ctx);
+                await CutiService().hapus(cuti.id!);
+                _showSnackBar("Data berhasil dihapus", Colors.green);
+                getData();
+              }
+            },
+            child: const Text("Hapus", style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color, duration: const Duration(seconds: 2)),
+    );
+  }
+
+  String getNamaAsli(String email) {
+    try {
+      final user = _allUsers.firstWhere((u) => u.email == email);
+      return user.name ?? email;
+    } catch (e) { return email; }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = UserInfo.role == 'admin';
+    final isAdmin = UserInfo.role?.toLowerCase() == 'admin';
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       drawer: const Sidebar(),
-      backgroundColor: const Color(0xFF0F2027),
       appBar: AppBar(
-        title: const Text('Data Cuti', style: TextStyle(color: Colors.white)),
+        title: const Text('Riwayat Cuti', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: true,
+        elevation: 0, centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
+        width: double.infinity, height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
           ),
         ),
-        child: RefreshIndicator(
-          onRefresh: getData,
-          child: _cutiList.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Tidak ada data cuti.',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.only(top: 12, bottom: 80),
-                  itemCount: _cutiList.length,
-                  itemBuilder: (context, index) {
-                    final cuti = _cutiList[index];
-                    final isPending = cuti.status == 'Pending';
-                    final isOwner = cuti.ajukanCuti == UserInfo.username;
-
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      margin:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: SafeArea(
+          child: _isLoading 
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
+            : RefreshIndicator(
+                onRefresh: getData,
+                child: _cutiList.isEmpty
+                  ? const Center(child: Text("Riwayat cuti kosong.", style: TextStyle(color: Colors.white60)))
+                  : ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.07),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.person, color: Colors.white70),
-                              const SizedBox(width: 8),
-                              Text(
-                                cuti.ajukanCuti,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 6,
-                            children: [
-                              _infoChip(Icons.date_range,
-                                  "Mulai: ${cuti.tanggalMulai}"),
-                              _infoChip(Icons.date_range,
-                                  "Selesai: ${cuti.tanggalSelesai}"),
-                              _infoChip(Icons.note, "Alasan: ${cuti.alasan}"),
-                              _infoChip(Icons.info_outline,
-                                  "Status: ${cuti.status}"),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Aksi tombol
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              // ADMIN: edit hanya jika status masih Pending
-                              if (isAdmin && isPending)
-                                IconButton(
-                                  icon: const Icon(Icons.edit,
-                                      color: Colors.lightBlueAccent),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            CutiUpdateFormPage(cuti: cuti),
-                                      ),
-                                    ).then((_) => getData());
-                                  },
-                                ),
-
-                              // USER: bisa hapus jika bukan pending dan milik sendiri
-                              if (!isAdmin && isOwner && !isPending)
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.redAccent),
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text("Konfirmasi"),
-                                        content: const Text(
-                                            "Hapus cuti yang sudah diproses?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(ctx),
-                                            child: const Text("Batal"),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(ctx);
-                                              _deleteCuti(cuti.id);
-                                            },
-                                            child: const Text("Hapus"),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                      itemCount: _cutiList.length,
+                      itemBuilder: (context, index) {
+                        final cuti = _cutiList[index];
+                        final namaTampil = getNamaAsli(cuti.ajukanCuti ?? '');
+                        return _buildCutiCard(cuti, isAdmin, namaTampil);
+                      },
+                    ),
+              ),
         ),
       ),
-
-      // Tombol tambah cuti hanya untuk user
-      floatingActionButton: UserInfo.role != 'admin'
-          ? FloatingActionButton(
-              backgroundColor: Colors.tealAccent[700],
-              foregroundColor: Colors.black,
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CutiForm()),
-                );
-                getData();
-              },
-              child: const Icon(Icons.add),
-            )
-          : null,
+      floatingActionButton: isAdmin 
+        ? FloatingActionButton.extended(
+            backgroundColor: Colors.orangeAccent,
+            onPressed: () => _konfirmasiResetJatah(),
+            icon: const Icon(Icons.refresh, color: Colors.black87),
+            label: const Text("Reset Jatah & Riwayat", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+          )
+        : FloatingActionButton(
+            backgroundColor: const Color(0xFFD1EBDB),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CutiForm())).then((_) => getData()),
+            child: const Icon(Icons.add, color: Color(0xFF192524)),
+          ),
     );
   }
 
-  Widget _infoChip(IconData icon, String label) {
+  Widget _buildCutiCard(Cuti cuti, bool isAdmin, String namaTampil) {
+    final status = cuti.status?.toLowerCase().trim() ?? 'pending';
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white30),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.tealAccent[100], size: 18),
-          const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white70)),
-        ],
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: const CircleAvatar(backgroundColor: Color(0xFFD1EBDB), child: Icon(Icons.calendar_today, color: Colors.black87)),
+        title: Text(namaTampil, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("${cuti.tanggalMulai} - ${cuti.tanggalSelesai}", style: const TextStyle(color: Colors.white70)),
+            // MENAMPILKAN ALASAN CUTI
+            Text("Alasan: ${cuti.alasan ?? '-'}", style: const TextStyle(color: Colors.white60, fontStyle: FontStyle.italic)),
+            const SizedBox(height: 4),
+            Text("Status: ${cuti.status}", style: TextStyle(color: _getStatusColor(cuti.status), fontWeight: FontWeight.bold)),
+          ],
+        ),
+        trailing: isAdmin 
+          ? (status == 'pending' 
+              ? IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.white70), 
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => CutiUpdateFormPage(cuti: cuti, namaPengaju: namaTampil))).then((_) => getData());
+                  })
+              : null) 
+          : (status == 'pending' || status == 'ditolak'
+              ? IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.redAccent), 
+                  onPressed: () => _konfirmasiHapus(cuti))
+              : null), 
       ),
     );
+  }
+
+  Color _getStatusColor(String? status) {
+    if (status?.toLowerCase() == 'disetujui') return Colors.greenAccent;
+    if (status?.toLowerCase() == 'ditolak') return Colors.redAccent;
+    return Colors.orangeAccent;
   }
 }
