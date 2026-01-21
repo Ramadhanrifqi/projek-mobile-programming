@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Tambahkan ini untuk FilteringTextInputFormatter
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../model/user.dart';
 import '../service/user_service.dart';
@@ -15,7 +15,6 @@ class TambahKaryawanPage extends StatefulWidget {
 class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
   final _formKey = GlobalKey<FormState>();
   
-  // Controller
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -23,28 +22,88 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
   final _educationCtrl = TextEditingController();
   final _skillsCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
-  
-  // Controller Baru & Update
   final _addressCtrl = TextEditingController();
   final _joinDateCtrl = TextEditingController();
   final _awardsCtrl = TextEditingController();
-  final _jobDescCtrl = TextEditingController(); // Pengganti dropdown jenis pekerjaan
+  final _jobDescCtrl = TextEditingController();
 
   String? _selectedDepartment;
   String? _selectedLevel;
+  bool _isLoading = false;
 
+  // --- REVISI: DATE PICKER DENGAN TEMA GELAP (Sama seperti Cuti Form) ---
   Future<void> _selectDate(BuildContext context) async {
     DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFFD1EBDB), // Warna seleksi
+              onPrimary: Color(0xFF192524), // Warna teks di atas seleksi
+              surface: Color(0xFF192524), // Background kalender
+              onSurface: Colors.white, // Warna teks tanggal
+            ),
+            dialogBackgroundColor: const Color(0xFF192524),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
         _joinDateCtrl.text = DateFormat('yyyy-MM-dd').format(picked);
       });
     }
+  }
+
+  // --- REVISI: DIALOG KONFIRMASI RATA TENGAH ---
+  void _showResultDialog(String title, String message, bool isSuccess) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.greenAccent, width: 2),
+        ),
+        title: Center(
+          child: Icon(
+            isSuccess ? Icons.check_circle : Icons.error_outline,
+            color: isSuccess ? Colors.greenAccent : Colors.redAccent,
+            size: 50,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title, 
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            const SizedBox(height: 10),
+            Text(message, 
+              textAlign: TextAlign.center, 
+              style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                if (isSuccess) Navigator.pop(context);
+              },
+              child: const Text("OK", 
+                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          )
+        ],
+      ),
+    );
   }
 
   @override
@@ -79,7 +138,7 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD1EBDB).withOpacity(0.15),
+                    color: Colors.white.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(25),
                     border: Border.all(color: Colors.white.withOpacity(0.2)),
                   ),
@@ -91,21 +150,13 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
                         _buildSectionTitle(Icons.person, "Informasi Pribadi"),
                         _buildModernField(_nameCtrl, "Nama Lengkap", Icons.badge_outlined),
                         _buildModernField(_emailCtrl, "Email", Icons.email_outlined),
-                        
-                        // Validasi Password Minimal 8 Karakter
                         _buildPasswordField(),
-                        
-                        // Input Nomor Telepon (Hanya Angka)
                         _buildPhoneField(),
-
-                        _buildModernField(_addressCtrl, "Alamat Domisili", Icons.home_outlined, maxLines: 2),
+                        _buildModernField(_addressCtrl, "Alasan Domisili", Icons.home_outlined, maxLines: 2),
                         
                         const SizedBox(height: 20),
                         _buildSectionTitle(Icons.work_outline, "Detail Pekerjaan"),
-                        
-                        // Deskripsi Pekerjaan (Bukan Dropdown)
                         _buildModernField(_jobDescCtrl, "Deskripsi Pekerjaan", Icons.assignment_outlined, maxLines: 2),
-
                         _buildModernDropdown(
                           label: "Departemen",
                           icon: Icons.account_tree_outlined,
@@ -113,8 +164,6 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
                           items: ["Operator", "Gudang", "HR", "Produksi"],
                           onChanged: (v) => setState(() => _selectedDepartment = v),
                         ),
-
-                        // Level Terbatas (Junior, Senior, Lead)
                         _buildModernDropdown(
                           label: "Level",
                           icon: Icons.trending_up,
@@ -122,20 +171,7 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
                           items: ["Junior", "Senior", "Lead"],
                           onChanged: (v) => setState(() => _selectedLevel = v),
                         ),
-
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: TextFormField(
-                            controller: _joinDateCtrl,
-                            readOnly: true,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: _inputDecoration("Tanggal Masuk", Icons.calendar_today).copyWith(
-                              suffixIcon: const Icon(Icons.date_range, color: Color(0xFFD1EBDB)),
-                            ),
-                            onTap: () => _selectDate(context),
-                            validator: (v) => v!.isEmpty ? "Tanggal wajib diisi" : null,
-                          ),
-                        ),
+                        _buildDateField(),
 
                         const SizedBox(height: 20),
                         _buildSectionTitle(Icons.emoji_events_outlined, "Pencapaian & Skill"),
@@ -145,7 +181,9 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
                         _buildModernField(_bioCtrl, "Bio Singkat", Icons.description, maxLines: 3),
                         
                         const SizedBox(height: 30),
-                        _buildSubmitButton(),
+                        _isLoading 
+                          ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
+                          : _buildSubmitButton(),
                       ],
                     ),
                   ),
@@ -158,7 +196,22 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
     );
   }
 
-  // Widget khusus Password dengan validasi 8 karakter
+  Widget _buildDateField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: _joinDateCtrl,
+        readOnly: true,
+        style: const TextStyle(color: Colors.white),
+        decoration: _inputDecoration("Tanggal Masuk", Icons.calendar_today).copyWith(
+          suffixIcon: const Icon(Icons.date_range, color: Color(0xFFD1EBDB)),
+        ),
+        onTap: () => _selectDate(context),
+        validator: (v) => v!.isEmpty ? "Tanggal wajib diisi" : null,
+      ),
+    );
+  }
+
   Widget _buildPasswordField() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -176,7 +229,6 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
     );
   }
 
-  // Widget khusus Telepon (Hanya Angka)
   Widget _buildPhoneField() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -250,8 +302,9 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
-        onPressed: () async {
+        onPressed: _isLoading ? null : () async {
           if (_formKey.currentState!.validate()) {
+            setState(() => _isLoading = true);
             final user = User(
               name: _nameCtrl.text,
               email: _emailCtrl.text,
@@ -265,15 +318,21 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
               bio: _bioCtrl.text,
               alamat: _addressCtrl.text,
               joinDate: _joinDateCtrl.text,
-              jobType: _jobDescCtrl.text, // Menyimpan deskripsi pekerjaan
+              jobType: _jobDescCtrl.text,
               awards: _awardsCtrl.text,
             );
             
-            bool success = await UserService().tambahUser(user);
-            if (success) {
-              if (!mounted) return;
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Data Karyawan Berhasil Disimpan")));
+            try {
+              bool success = await UserService().tambahUser(user);
+              setState(() => _isLoading = false);
+              if (success) {
+                _showResultDialog("Berhasil", "Data Karyawan Baru Telah Disimpan", true);
+              } else {
+                _showResultDialog("Gagal", "Terjadi kesalahan saat menyimpan data", false);
+              }
+            } catch (e) {
+              setState(() => _isLoading = false);
+              _showResultDialog("Error", e.toString(), false);
             }
           }
         },

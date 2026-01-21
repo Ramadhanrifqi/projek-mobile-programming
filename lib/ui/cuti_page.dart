@@ -50,37 +50,117 @@ class _CutiPageState extends State<CutiPage> {
     }
   }
 
+  // --- DIALOG SUKSES RATA TENGAH ---
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.greenAccent, width: 2),
+        ),
+        title: const Center(
+          child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
+        ),
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  // --- DIALOG ERROR/PERINGATAN RATA TENGAH ---
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.greenAccent, width: 2),
+        ),
+        title: Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB))),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
   void _konfirmasiResetJatah() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF203A43),
-        title: const Text("Peringatan Reset!", style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.greenAccent, width: 2),
+        ),
+        title: const Text(
+          "Peringatan Reset!", 
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)
+        ),
         content: const Text(
-          "Tindakan ini akan mengembalikan jatah cuti semua karyawan ke 14 hari DAN MENGHAPUS SELURUH RIWAYAT pengajuan cuti. Anda yakin?",
+          "Tindakan ini akan mengembalikan jatah cuti semua karyawan ke 14 hari DAN MENGHAPUS SELURUH RIWAYAT. Anda yakin?",
+          textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal")),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              setState(() => _isLoading = true);
-              try {
-                bool success = await CutiService().resetCutiSemua(); 
-                if (success) {
-                  _showSnackBar("Jatah direset & riwayat dikosongkan!", Colors.green);
-                  getData(); 
-                } else {
-                  _showSnackBar("Gagal mereset data", Colors.redAccent);
-                }
-              } catch (e) {
-                _showSnackBar("Terjadi kesalahan: $e", Colors.redAccent);
-              } finally {
-                setState(() => _isLoading = false);
-              }
-            },
-            child: const Text("Ya, Reset & Hapus", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal", style: TextStyle(color: Colors.white54))),
+              const SizedBox(width: 20),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  setState(() => _isLoading = true);
+                  try {
+                    bool success = await CutiService().resetCutiSemua(); 
+                    if (success) {
+                      _showSuccessDialog("Jatah direset & riwayat dikosongkan!");
+                      getData(); 
+                    } else {
+                      _showErrorDialog("Gagal", "Sistem tidak dapat mereset data.");
+                    }
+                  } catch (e) {
+                    _showErrorDialog("Error", e.toString());
+                  } finally {
+                    setState(() => _isLoading = false);
+                  }
+                },
+                child: const Text("Ya, Reset", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ],
       ),
@@ -91,30 +171,43 @@ class _CutiPageState extends State<CutiPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF203A43),
-        title: const Text("Hapus Pengajuan", style: TextStyle(color: Colors.white)),
-        content: const Text("Apakah Anda yakin ingin menghapus data ini?"),
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.greenAccent, width: 2),
+        ),
+        title: const Text(
+          "Hapus Pengajuan", 
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)
+        ),
+        content: const Text(
+          "Apakah Anda yakin ingin menghapus data pengajuan ini?", 
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70)
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal")),
-          TextButton(
-            onPressed: () async {
-              if (cuti.id != null) {
-                Navigator.pop(ctx);
-                await CutiService().hapus(cuti.id!);
-                _showSnackBar("Data berhasil dihapus", Colors.green);
-                getData();
-              }
-            },
-            child: const Text("Hapus", style: TextStyle(color: Colors.redAccent)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal", style: TextStyle(color: Colors.white54))),
+              const SizedBox(width: 20),
+              TextButton(
+                onPressed: () async {
+                  if (cuti.id != null) {
+                    Navigator.pop(ctx);
+                    await CutiService().hapus(cuti.id!);
+                    _showSuccessDialog("Data pengajuan berhasil dihapus.");
+                    getData();
+                  }
+                },
+                child: const Text("Hapus", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ],
       ),
-    );
-  }
-
-  void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: color, duration: const Duration(seconds: 2)),
     );
   }
 
@@ -151,6 +244,7 @@ class _CutiPageState extends State<CutiPage> {
             ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
             : RefreshIndicator(
                 onRefresh: getData,
+                color: const Color(0xFFD1EBDB),
                 child: _cutiList.isEmpty
                   ? const Center(child: Text("Riwayat cuti kosong.", style: TextStyle(color: Colors.white60)))
                   : ListView.builder(
@@ -198,7 +292,6 @@ class _CutiPageState extends State<CutiPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("${cuti.tanggalMulai} - ${cuti.tanggalSelesai}", style: const TextStyle(color: Colors.white70)),
-            // MENAMPILKAN ALASAN CUTI
             Text("Alasan: ${cuti.alasan ?? '-'}", style: const TextStyle(color: Colors.white60, fontStyle: FontStyle.italic)),
             const SizedBox(height: 4),
             Text("Status: ${cuti.status}", style: TextStyle(color: _getStatusColor(cuti.status), fontWeight: FontWeight.bold)),

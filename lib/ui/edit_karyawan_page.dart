@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Penting untuk FilteringTextInputFormatter
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../model/user.dart';
 import '../service/user_service.dart';
@@ -17,12 +17,11 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
   final _formKey = GlobalKey<FormState>();
   
   late TextEditingController _nameCtrl, _emailCtrl, _phoneCtrl, _educationCtrl, 
-       _skillsCtrl, _bioCtrl, _addressCtrl, _joinDateCtrl, _awardsCtrl, 
-       _newPasswordCtrl, _jobDescCtrl; // Ditambahkan _jobDescCtrl
+       _skillsCtrl, _bioCtrl, _addressCtrl, _joinDateCtrl, _awardsCtrl, _jobDescCtrl;
 
   String? _selectedDepartment;
   String? _selectedLevel;
-  bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -36,25 +35,85 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
     _addressCtrl = TextEditingController(text: widget.user.alamat);
     _joinDateCtrl = TextEditingController(text: widget.user.joinDate);
     _awardsCtrl = TextEditingController(text: widget.user.awards);
-    _jobDescCtrl = TextEditingController(text: widget.user.jobType); // Inisialisasi deskripsi
-    _newPasswordCtrl = TextEditingController();
+    _jobDescCtrl = TextEditingController(text: widget.user.jobType);
 
     _selectedDepartment = widget.user.department;
     _selectedLevel = widget.user.level;
   }
 
+  // --- REVISI: DATE PICKER TEMA GELAP ---
   Future<void> _selectDate(BuildContext context) async {
     DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFFD1EBDB),
+              onPrimary: Color(0xFF192524),
+              surface: Color(0xFF192524),
+              onSurface: Colors.white,
+            ),
+            dialogBackgroundColor: const Color(0xFF192524),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
         _joinDateCtrl.text = DateFormat('yyyy-MM-dd').format(picked);
       });
     }
+  }
+
+  // --- REVISI: DIALOG DENGAN BORDER & RATA TENGAH ---
+  void _showResultDialog(String title, String message, bool isSuccess) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: isSuccess ? Colors.greenAccent : Colors.redAccent, width: 2), // Tambah Border
+        ),
+        title: Center(
+          child: Icon(
+            isSuccess ? Icons.check_circle : Icons.error_outline,
+            color: isSuccess ? Colors.greenAccent : Colors.redAccent,
+            size: 50,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title, 
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            const SizedBox(height: 10),
+            Text(message, 
+              textAlign: TextAlign.center, 
+              style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                if (isSuccess) Navigator.pop(context, true);
+              },
+              child: const Text("OK", 
+                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          )
+        ],
+      ),
+    );
   }
 
   @override
@@ -87,7 +146,7 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD1EBDB).withOpacity(0.15),
+                    color: Colors.white.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(25),
                     border: Border.all(color: Colors.white.withOpacity(0.2)),
                   ),
@@ -99,28 +158,14 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
                         _buildSectionTitle(Icons.person, "Informasi Pribadi"),
                         _buildModernField(_nameCtrl, "Nama Lengkap", Icons.badge_outlined),
                         _buildModernField(_emailCtrl, "Email", Icons.email_outlined),
-                        
-                        // Validasi Telepon (Hanya Angka)
                         _buildPhoneField(),
-
                         _buildModernField(_addressCtrl, "Alamat", Icons.home_outlined, maxLines: 2),
 
                         const SizedBox(height: 20),
-                        _buildSectionTitle(Icons.security, "Keamanan (Opsional)"),
-                        
-                        // Validasi Password (Minimal 8 Karakter jika diisi)
-                        _buildPasswordField(),
-
-                        const SizedBox(height: 20),
                         _buildSectionTitle(Icons.work_outline, "Pekerjaan"),
-                        
-                        // Deskripsi Pekerjaan (Bukan Dropdown)
                         _buildModernField(_jobDescCtrl, "Deskripsi Pekerjaan", Icons.assignment_outlined, maxLines: 2),
-
                         _buildModernDropdown("Departemen", Icons.account_tree_outlined, _selectedDepartment, 
                             ["Operator", "Gudang", "HR", "Produksi"], (v) => setState(() => _selectedDepartment = v)),
-                        
-                        // Level Terbatas
                         _buildModernDropdown("Level", Icons.trending_up, _selectedLevel, 
                             ["Junior", "Senior", "Lead"], (v) => setState(() => _selectedLevel = v)),
                         
@@ -143,7 +188,9 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
                         _buildModernField(_bioCtrl, "Bio", Icons.description_outlined, maxLines: 3),
 
                         const SizedBox(height: 30),
-                        _buildSaveButton(),
+                        _isLoading 
+                          ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
+                          : _buildSaveButton(),
                       ],
                     ),
                   ),
@@ -152,31 +199,6 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        controller: _newPasswordCtrl,
-        obscureText: _obscurePassword,
-        style: const TextStyle(color: Colors.white),
-        decoration: _inputDecoration("Password Baru", Icons.lock_reset_outlined).copyWith(
-          helperText: "Kosongkan jika tidak ingin mengganti",
-          helperStyle: const TextStyle(color: Colors.white54, fontSize: 11),
-          suffixIcon: IconButton(
-            icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: const Color(0xFFD1EBDB)),
-            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-          ),
-        ),
-        validator: (v) {
-          if (v != null && v.isNotEmpty && v.length < 8) {
-            return "Password minimal 8 karakter";
-          }
-          return null;
-        },
       ),
     );
   }
@@ -212,7 +234,7 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<String>(
-        value: items.contains(value) ? value : null, // Mencegah error jika data lama tidak ada di list baru
+        value: items.contains(value) ? value : null,
         dropdownColor: const Color(0xFF3C5759),
         style: const TextStyle(color: Colors.white),
         decoration: _inputDecoration(label, icon),
@@ -251,13 +273,14 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
     return SizedBox(
       width: double.infinity, height: 55,
       child: ElevatedButton(
-        onPressed: () async {
+        onPressed: _isLoading ? null : () async {
           if (_formKey.currentState!.validate()) {
+            setState(() => _isLoading = true);
             final updatedUser = User(
               id: widget.user.id,
               name: _nameCtrl.text,
               email: _emailCtrl.text,
-              password: _newPasswordCtrl.text.isNotEmpty ? _newPasswordCtrl.text : widget.user.password, 
+              password: widget.user.password, // Menggunakan password lama
               role: widget.user.role,
               phone: _phoneCtrl.text,
               department: _selectedDepartment,
@@ -267,15 +290,21 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
               bio: _bioCtrl.text,
               alamat: _addressCtrl.text,
               joinDate: _joinDateCtrl.text,
-              jobType: _jobDescCtrl.text, // Mengambil data dari controller teks
+              jobType: _jobDescCtrl.text,
               awards: _awardsCtrl.text,
             );
 
-            bool success = await UserService().updateUser(updatedUser);
-            if (success) {
-              if (!mounted) return;
-              Navigator.pop(context, true);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Perubahan Berhasil Disimpan")));
+            try {
+              bool success = await UserService().updateUser(updatedUser);
+              setState(() => _isLoading = false);
+              if (success) {
+                _showResultDialog("Berhasil", "Data Karyawan Telah Diperbarui", true);
+              } else {
+                _showResultDialog("Gagal", "Tidak dapat menyimpan perubahan", false);
+              }
+            } catch (e) {
+              setState(() => _isLoading = false);
+              _showResultDialog("Error", e.toString(), false);
             }
           }
         },

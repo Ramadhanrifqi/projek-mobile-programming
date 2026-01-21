@@ -35,9 +35,37 @@ class _CutiFormState extends State<CutiForm> {
     });
   }
 
-  void _showSnackBar(String message, {Color color = Colors.redAccent}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: color, duration: const Duration(seconds: 2)),
+  // --- REVISI: DIALOG DENGAN TEKS & TOMBOL DI TENGAH ---
+  void _showMessageDialog(String title, String message, {bool isSuccess = false}) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.greenAccent, width: 2),
+        ),
+        
+        title: Text(
+          title, 
+          textAlign: TextAlign.center, // Judul di tengah
+          style: TextStyle(color: isSuccess ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          message, 
+          textAlign: TextAlign.center, // Pesan di tengah
+          style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          Center( // Tombol di tengah
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          )
+        ],
+      ),
     );
   }
 
@@ -120,14 +148,12 @@ class _CutiFormState extends State<CutiForm> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFD1EBDB), 
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
         ),
         onPressed: () async {
           if (_formKey.currentState!.validate()) {
             setState(() => _isSaving = true);
             
             try {
-              // Menghilangkan jam agar formatnya murni YYYY-MM-DD
               String tglMulaiStr = _tanggalMulaiCtrl.text.trim();
               String tglSelesaiStr = _tanggalSelesaiCtrl.text.trim();
 
@@ -136,46 +162,70 @@ class _CutiFormState extends State<CutiForm> {
               DateTime sekarang = DateTime.now();
               DateTime hariIni = DateTime(sekarang.year, sekarang.month, sekarang.day);
 
-              // Validasi Bisnis
               if (mulai.difference(hariIni).inDays < 7) {
-                _showSnackBar("Pengajuan cuti minimal 1 minggu sebelum hari-H");
+                _showMessageDialog("Peringatan", "Pengajuan cuti minimal 1 minggu sebelum hari-H");
                 setState(() => _isSaving = false);
                 return;
               }
 
               int durasi = selesai.difference(mulai).inDays + 1;
               if (durasi > 4) {
-                _showSnackBar("Sekali pengajuan maksimal hanya boleh 4 hari");
+                _showMessageDialog("Peringatan", "Sekali pengajuan maksimal hanya boleh 4 hari");
                 setState(() => _isSaving = false);
                 return;
               }
 
               if (selesai.isBefore(mulai)) {
-                _showSnackBar("Tanggal selesai tidak boleh sebelum tanggal mulai");
+                _showMessageDialog("Kesalahan", "Tanggal selesai tidak boleh sebelum tanggal mulai");
                 setState(() => _isSaving = false);
                 return;
               }
 
-              // Mapping data ke model Cuti
               Cuti cuti = Cuti(
-                ajukanCuti: UserInfo.username, // Mengirim email login ke Laravel
+                ajukanCuti: UserInfo.username, 
                 tanggalMulai: tglMulaiStr,
                 tanggalSelesai: tglSelesaiStr,
                 alasan: _alasanCtrl.text,
                 status: 'Pending',
               );
 
-              // Eksekusi Simpan
               await CutiService().simpan(cuti).then((value) {
-                _showSnackBar("Pengajuan Berhasil Dikirim", color: Colors.green);
-                Future.delayed(const Duration(seconds: 1), () {
-                  if (mounted) Navigator.pop(context, true);
-                });
+                // --- REVISI: DIALOG SUKSES DENGAN TEKS & TOMBOL DI TENGAH ---
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: const Color(0xFF192524),
+                    shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.greenAccent, width: 2),
+        ),
+                    title: const Center( // Judul/Icon di tengah
+                      child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
+                    ),
+                    content: const Text(
+                      "Pengajuan Berhasil Dikirim!", 
+                      textAlign: TextAlign.center, // Teks di tengah
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+                    ),
+                    actions: [
+                      Center( // Tombol di tengah
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            Navigator.pop(context, true);
+                          },
+                          child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+                        ),
+                      )
+                    ],
+                  ),
+                );
               });
 
             } catch (e) {
-              debugPrint("ERROR_SIMPAN: $e");
-              _showSnackBar("Terjadi kesalahan koneksi atau format data");
+              _showMessageDialog("Error", "Terjadi kesalahan koneksi atau format data");
             } finally {
               if (mounted) setState(() => _isSaving = false);
             }
@@ -214,7 +264,6 @@ class _CutiFormState extends State<CutiForm> {
         );
         if (picked != null) {
           setState(() {
-            // Format YYYY-MM-DD
             ctrl.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
           });
         }
@@ -243,8 +292,6 @@ class _CutiFormState extends State<CutiForm> {
       fillColor: Colors.white.withOpacity(0.05),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFD1EBDB))),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.redAccent)),
-      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.redAccent)),
     );
   }
 }

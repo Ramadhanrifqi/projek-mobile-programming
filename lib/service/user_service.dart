@@ -1,87 +1,92 @@
+import 'package:flutter/material.dart';
 import '../helpers/api_client.dart';
 import '../model/user.dart';
-import 'package:flutter/material.dart';
 
 class UserService {
   final ApiClient _apiClient = ApiClient();
 
-  // Ambil semua data user
+  /// Mengambil semua data user dari database
   Future<List<User>> getAllUsers() async {
-    final response = await _apiClient.get('users');
-    if (response.statusCode == 200) {
-      List data = response.data;
-      return data.map((item) => User.fromJson(item)).toList();
+    try {
+      final response = await _apiClient.get('users');
+      if (response.statusCode == 200) {
+        List data = response.data;
+        return data.map((item) => User.fromJson(item)).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint("Error getAllUsers: $e");
+      return [];
     }
-    return [];
   }
 
-  // Tambah user baru
-// lib/service/user_service.dart
-Future<bool> tambahUser(User user) async {
-  try {
-    // Pastikan endpoint 'register' sudah sesuai dengan routes/api.php di Laravel
-    final response = await _apiClient.post('register', user.toJson());
-    return response.statusCode == 201; // Laravel mengembalikan 201 untuk data baru
-  } catch (e) {
-    print("Error tambah karyawan: $e");
-    return false;
+  /// Menambah user baru (Register)
+  Future<bool> tambahUser(User user) async {
+    try {
+      final response = await _apiClient.post('register', user.toJson());
+      return response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Error tambahUser: $e");
+      return false;
+    }
   }
-}
 
-  // UPDATE USER (Fungsi yang kurang)
-  // lib/service/user_service.dart
-Future<bool> updateUser(User user) async {
-  // TAMBAHKAN BARIS INI UNTUK DEBUGGING
-  print("DEBUG: Mengirim Update untuk ID: ${user.id}");
-  print("DEBUG: Data yang dikirim: ${user.toJson()}");
-
-  try {
-    final response = await _apiClient.put('users/${user.id}', user.toJson());
-    return response.statusCode == 200;
-  } catch (e) {
-    print("Error Update: $e");
-    return false;
+  /// Memperbarui data profile atau password user
+  Future<bool> updateUser(User user) async {
+    try {
+      final response = await _apiClient.put('users/${user.id}', user.toJson());
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint("Error updateUser: $e");
+      return false;
+    }
   }
-}
 
-  // Hapus user
+  /// Menghapus akun user beserta data terkait (riwayat cuti) di backend
   Future<bool> hapusUser(String id) async {
-    final response = await _apiClient.delete('users/$id');
-    return response.statusCode == 200;
+    try {
+      final response = await _apiClient.delete('users/$id');
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint("Error hapusUser: $e");
+      return false;
+    }
   }
 
-Future resetJatah() async {
-  try {
-    // Pastikan path ini sama dengan yang ada di Route Laravel (users/reset-jatah)
-    final response = await ApiClient().post('users/reset-jatah', {});
-    return response;
-  } catch (e) {
-    throw Exception("Gagal Reset: $e");
+  /// Reset jatah cuti semua karyawan menjadi default (14 hari)
+  Future resetJatah() async {
+    try {
+      final response = await _apiClient.post('users/reset-jatah', {});
+      return response;
+    } catch (e) {
+      debugPrint("Error resetJatah: $e");
+      throw Exception("Gagal Reset Jatah: $e");
+    }
   }
-}
 
-Future<Map<String, dynamic>> changePassword(String email, String oldPass, String newPass) async {
-  try {
-    final response = await ApiClient().post('change-password', {
-      'email': email,
-      'old_password': oldPass,
-      'new_password': newPass,
-    });
-    return {'success': true, 'message': response.data['message']};
-  } catch (e) {
-    return {'success': false, 'message': 'Gagal ganti password'};
+  /// Mengganti password user (Memerlukan password lama)
+  Future<Map<String, dynamic>> changePassword(String email, String oldPass, String newPass) async {
+    try {
+      final response = await _apiClient.post('change-password', {
+        'email': email,
+        'old_password': oldPass,
+        'new_password': newPass,
+      });
+      return {'success': true, 'message': response.data['message']};
+    } catch (e) {
+      debugPrint("Error changePassword: $e");
+      return {'success': false, 'message': 'Gagal ganti password'};
+    }
   }
-}
 
-Future<bool> resetPassword(String id) async {
-  try {
-    // Pastikan endpoint menggunakan reset-password (sesuai route Laravel)
-    final response = await _apiClient.post('users/$id/reset-password', {});
-    return response.statusCode == 200;
-  } catch (e) {
-    // Perhatikan tanda kutip di bawah ini
-    debugPrint("Error Reset Password: $e"); 
-    return false;
+  /// Reset password user tertentu oleh Admin menjadi password default
+  Future<bool> resetPassword(String id) async {
+    try {
+      final response = await _apiClient.post('users/$id/reset-password', {});
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint("Error resetPassword: $e");
+      return false;
+    }
   }
-}
 }

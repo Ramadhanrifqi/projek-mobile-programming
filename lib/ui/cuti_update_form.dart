@@ -27,7 +27,6 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
   @override
   void initState() {
     super.initState();
-    // Mengisi data awal dari widget yang dikirim
     _ajukanCutiCtrl.text = widget.namaPengaju;
     _tanggalMulaiCtrl.text = widget.cuti.tanggalMulai ?? '';
     _tanggalSelesaiCtrl.text = widget.cuti.tanggalSelesai ?? '';
@@ -35,9 +34,71 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     _statusCtrl.text = widget.cuti.status ?? 'Pending';
   }
 
-  void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: color),
+  // --- DIALOG SUKSES RATA TENGAH ---
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+         shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.greenAccent, width: 2),
+        ),
+        title: const Center(
+          child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
+        ),
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context, true);
+              },
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  // --- DIALOG ERROR RATA TENGAH ---
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.greenAccent, width: 2),
+        ),
+        title: const Text(
+          "Gagal",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB))),
+            ),
+          )
+        ],
+      ),
     );
   }
 
@@ -84,6 +145,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
                           const Icon(Icons.edit_calendar_rounded, size: 60, color: Color(0xFFD1EBDB)),
                           const SizedBox(height: 16),
                           const Text('Proses Pengajuan Cuti', 
+                            textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 32),
                           
@@ -96,7 +158,6 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
                           _buildReadOnlyField(_alasanCtrl, "Alasan", Icons.notes, maxLines: 2),
                           const SizedBox(height: 16),
                           
-                          // Dropdown untuk mengubah status
                           _buildStatusDropdown(),
                           
                           const SizedBox(height: 32),
@@ -163,7 +224,6 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
         onPressed: () async {
           setState(() => _isLoading = true);
           try {
-            // Membuat objek cuti dengan status yang baru
             Cuti cutiBaru = Cuti(
               id: widget.cuti.id,
               ajukanCuti: widget.cuti.ajukanCuti,
@@ -173,13 +233,11 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
               status: _statusCtrl.text,
             );
 
-            // Memanggil service ubah (Pastikan id tidak null dengan tanda !)
             await CutiService().ubah(cutiBaru, widget.cuti.id!).then((value) {
-              _showSnackBar("Status berhasil diperbarui", Colors.green);
-              Navigator.pop(context, true); // True untuk sinyal refresh data
+              _showSuccessDialog("Status pengajuan berhasil diperbarui.");
             });
           } catch (e) {
-            _showSnackBar("Gagal memperbarui: $e", Colors.redAccent);
+            _showErrorDialog("Gagal memperbarui data: $e");
           } finally {
             setState(() => _isLoading = false);
           }

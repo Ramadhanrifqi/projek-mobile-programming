@@ -24,7 +24,6 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
   Future<void> fetchUsers() async {
     setState(() => _isLoading = true);
     final data = await UserService().getAllUsers();
-    // Memfilter agar admin tidak muncul di daftar karyawan
     final filtered = data.where((u) => u.role?.toLowerCase() != 'admin').toList();
 
     setState(() {
@@ -33,54 +32,156 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     });
   }
 
-  Future<void> deleteUser(String id) async {
-    await UserService().hapusUser(id);
-    fetchUsers(); 
+  // --- REVISI: DIALOG SUKSES RATA TENGAH ---
+  void _showResultDialog(String title, String message, bool isSuccess) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20),side: BorderSide(color: isSuccess ? Colors.greenAccent : Colors.redAccent, width: 2),),
+        title: Center(
+          child: Icon(
+            isSuccess ? Icons.check_circle : Icons.error_outline,
+            color: isSuccess ? Colors.greenAccent : Colors.redAccent,
+            size: 50,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title, 
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            const SizedBox(height: 10),
+            Text(message, 
+              textAlign: TextAlign.center, 
+              style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("OK", 
+                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          )
+        ],
+      ),
+    );
   }
 
-  // --- FUNGSI RESET PASSWORD ---
+  // --- REVISI: TAMPILAN TOMBOL KONFIRMASI RESET ---
   void _konfirmasiResetPassword(User user) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Reset Password?", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.orangeAccent, width: 2),
+        ),
+        
+        title: const Text("Reset Password?", 
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
         content: Text(
           "Password ${user.name} akan direset menjadi 'nagahytam123'. Lanjutkan?",
+          textAlign: TextAlign.center,
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("BATAL", style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
-            onPressed: () async {
-              Navigator.pop(context);
-              if (user.id != null) {
-                bool success = await UserService().resetPassword(user.id!);
-                if (!mounted) return;
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Password ${user.name} berhasil direset!"), backgroundColor: Colors.green),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Gagal mereset password"), backgroundColor: Colors.redAccent),
-                  );
-                }
-              }
-            },
-            child: const Text("YA, RESET", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(180, 0, 255, 145),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text("BATAL", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orangeAccent,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  if (user.id != null) {
+                    bool success = await UserService().resetPassword(user.id!);
+                    if (success) {
+                      _showResultDialog("Berhasil", "Password ${user.name} telah direset", true);
+                    } else {
+                      _showResultDialog("Gagal", "Sistem tidak dapat mereset password", false);
+                    }
+                  }
+                },
+                child: const Text("RESET", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  // --- FUNGSI POP-UP DETAIL LENGKAP ---
+  // --- REVISI: TAMPILAN TOMBOL KONFIRMASI HAPUS ---
+  void _konfirmasiHapus(User user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          // Fixed: Remove isSuccess usage, use a neutral border color
+          side: const BorderSide(color: Colors.redAccent, width: 2),
+        ),
+        title: const Text('Konfirmasi Hapus', 
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+        content: Text('Yakin ingin menghapus karyawan ${user.name}?', 
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white70)),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(180, 0, 255, 145),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text("BATAL", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  if (user.id != null) {
+                    await UserService().hapusUser(user.id!);
+                    _showResultDialog("Dihapus", "Data ${user.name} telah dihapus", true);
+                    fetchUsers();
+                  }
+                },
+                child: const Text('HAPUS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- FUNGSI POP-UP DETAIL (Tetap Konsisten) ---
   void tampilkanDetail(User user) {
     showDialog(
       context: context,
@@ -92,21 +193,13 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
             CircleAvatar(
               radius: 40,
               backgroundColor: const Color(0xFFD1EBDB),
-              child: Text(
-                user.name?.substring(0, 1).toUpperCase() ?? "U",
-                style: const TextStyle(fontSize: 30, color: Color(0xFF192524), fontWeight: FontWeight.bold),
-              ),
+              child: Text(user.name?.substring(0, 1).toUpperCase() ?? "U",
+                style: const TextStyle(fontSize: 30, color: Color(0xFF192524), fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 15),
-            Text(
-              user.name ?? "Tanpa Nama",
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              user.email,
-              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
-            ),
+            Text(user.name ?? "Tanpa Nama", textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(user.email, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14)),
           ],
         ),
         content: SizedBox(
@@ -131,9 +224,11 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("TUTUP", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("TUTUP", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
           ),
         ],
       ),
@@ -226,35 +321,25 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
               children: [
                 CircleAvatar(
                   backgroundColor: const Color(0xFFD1EBDB),
-                  child: Text(
-                    user.name?.substring(0, 1).toUpperCase() ?? "U",
-                    style: const TextStyle(color: Color(0xFF192524), fontWeight: FontWeight.bold),
-                  ),
+                  child: Text(user.name?.substring(0, 1).toUpperCase() ?? "U",
+                    style: const TextStyle(color: Color(0xFF192524), fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(width: 15),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        user.name ?? "Nama Tidak Tersedia",
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        user.department ?? "Departemen Belum Diatur",
-                        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13),
-                      ),
+                      Text(user.name ?? "Nama Tidak Tersedia",
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(user.department ?? "Departemen Belum Diatur",
+                        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13)),
                     ],
                   ),
                 ),
-                // --- TOMBOL AKSI ---
                 _buildActionButton(Icons.lock_reset, Colors.orangeAccent, () => _konfirmasiResetPassword(user)),
                 const SizedBox(width: 8),
                 _buildActionButton(Icons.edit, Colors.amber, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => EditKaryawanPage(user: user)),
-                  ).then((_) => fetchUsers());
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => EditKaryawanPage(user: user))).then((_) => fetchUsers());
                 }),
                 const SizedBox(width: 8),
                 _buildActionButton(Icons.delete, Colors.redAccent, () => _konfirmasiHapus(user)),
@@ -273,32 +358,6 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
         child: Icon(icon, color: color, size: 20),
-      ),
-    );
-  }
-
-  void _konfirmasiHapus(User user) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF3C5759),
-        title: const Text('Konfirmasi Hapus', style: TextStyle(color: Colors.white)),
-        content: Text('Yakin ingin menghapus ${user.name}?', style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal', style: TextStyle(color: Colors.white54))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () async {
-              Navigator.pop(context);
-              if (user.id != null) {
-                await deleteUser(user.id!);
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Berhasil menghapus ${user.name}')));
-              }
-            },
-            child: const Text('Hapus'),
-          ),
-        ],
       ),
     );
   }

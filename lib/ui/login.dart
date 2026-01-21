@@ -18,7 +18,46 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isObscure = true;
 
-  // ✅ Fungsi simpan data lengkap ke SharedPreferences
+  // --- FUNGSI DIALOG PERINGATAN / ERROR (Rata Tengah dengan Border) ---
+  void _showAlertDialog(String title, String message, Color borderColor) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: borderColor, width: 2),
+        ),
+        title: Center(
+          child: Icon(
+            title == "Peringatan" ? Icons.warning_amber_rounded : Icons.error_outline,
+            color: borderColor,
+            size: 50,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title, 
+              style: TextStyle(color: borderColor, fontWeight: FontWeight.bold, fontSize: 18)),
+            const SizedBox(height: 10),
+            Text(message, 
+              textAlign: TextAlign.center, 
+              style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> saveUserInfo(String name, String role, String email) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('name', name);      
@@ -27,39 +66,38 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      // Menampilkan loading indikator sederhana
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB))),
+    // Validasi manual sebelum proses login untuk memicu Dialog Peringatan
+    if (_emailCtrl.text.isEmpty || _passwordCtrl.text.isEmpty) {
+      _showAlertDialog("Peringatan", "Email dan Password wajib diisi.", Colors.orangeAccent);
+      return;
+    }
+
+    // Menampilkan loading indikator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB))),
+    );
+
+    final user = await LoginService().login(
+      _emailCtrl.text,
+      _passwordCtrl.text,
+    );
+
+    if (!mounted) return;
+    Navigator.pop(context); // Tutup loading
+
+    if (user != null) {
+      UserInfo.setUser(user);
+      await saveUserInfo(user.name ?? '', user.role, user.email);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Beranda()),
       );
-
-      final user = await LoginService().login(
-        _emailCtrl.text,
-        _passwordCtrl.text,
-      );
-
-      if (!mounted) return;
-      Navigator.pop(context); // Tutup loading
-
-      if (user != null) {
-        UserInfo.setUser(user);
-        await saveUserInfo(user.name ?? '', user.role, user.email);
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Beranda()),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email atau Password salah!'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+    } else {
+      // GANTI SNACKBAR KE DIALOG ERROR
+      _showAlertDialog("Gagal Masuk", "Email atau Password yang Anda masukkan salah.", Colors.redAccent);
     }
   }
 
@@ -96,7 +134,6 @@ class _LoginPageState extends State<LoginPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Logo dengan bayangan halus
                           Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
@@ -121,7 +158,6 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 32),
                           
-                          // Input Email
                           _buildTextField(
                             controller: _emailCtrl,
                             label: "Email",
@@ -130,7 +166,6 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 20),
                           
-                          // Input Password
                           _buildTextField(
                             controller: _passwordCtrl,
                             label: "Password",
@@ -141,7 +176,6 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 32),
                           
-                          // Tombol Login
                           SizedBox(
                             width: double.infinity,
                             height: 55,
@@ -203,16 +237,7 @@ class _LoginPageState extends State<LoginPage> {
           borderRadius: BorderRadius.circular(15),
           borderSide: const BorderSide(color: Color(0xFFD1EBDB)),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Colors.redAccent),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Colors.redAccent),
-        ),
       ),
-      validator: (v) => v!.isEmpty ? '$label wajib diisi' : null,
     );
   }
 }
