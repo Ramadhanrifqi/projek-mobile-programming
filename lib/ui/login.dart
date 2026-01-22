@@ -66,7 +66,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLogin() async {
-    // Validasi manual sebelum proses login untuk memicu Dialog Peringatan
     if (_emailCtrl.text.isEmpty || _passwordCtrl.text.isEmpty) {
       _showAlertDialog("Peringatan", "Email dan Password wajib diisi.", Colors.orangeAccent);
       return;
@@ -79,25 +78,39 @@ class _LoginPageState extends State<LoginPage> {
       builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB))),
     );
 
-    final user = await LoginService().login(
-      _emailCtrl.text,
-      _passwordCtrl.text,
-    );
-
-    if (!mounted) return;
-    Navigator.pop(context); // Tutup loading
-
-    if (user != null) {
-      UserInfo.setUser(user);
-      await saveUserInfo(user.name ?? '', user.role, user.email);
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Beranda()),
+    try {
+      // 1. Panggil Service Login (Mendapatkan data response lengkap)
+      final response = await LoginService().login(
+        _emailCtrl.text,
+        _passwordCtrl.text,
       );
-    } else {
-      // GANTI SNACKBAR KE DIALOG ERROR
-      _showAlertDialog("Gagal Masuk", "Email atau Password yang Anda masukkan salah.", Colors.redAccent);
+
+      if (!mounted) return;
+      Navigator.pop(context); // Tutup loading
+
+      // 2. Cek apakah login berhasil berdasarkan struktur data API Anda
+      if (response != null && response['user'] != null) {
+        // Ambil data user dari objek response
+        final userData = response['user'];
+        final token = response['token']; // Pastikan key-nya 'token' sesuai API Laravel
+
+        // 3. Set data ke UserInfo (User Model & Token String)
+        UserInfo.setUser(userData, token); 
+        
+        // 4. Simpan ke Local Storage (SharedPreferences)
+        await saveUserInfo(userData.name ?? '', userData.role ?? '', userData.email ?? '');
+        
+        // 5. Navigasi ke Beranda
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Beranda()),
+        );
+      } else {
+        _showAlertDialog("Gagal Masuk", "Email atau Password salah.", Colors.redAccent);
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context); // Tutup loading jika error
+      _showAlertDialog("Error", "Terjadi kesalahan: $e", Colors.redAccent);
     }
   }
 
@@ -157,7 +170,6 @@ class _LoginPageState extends State<LoginPage> {
                             style: TextStyle(fontSize: 14, color: Colors.white70),
                           ),
                           const SizedBox(height: 32),
-                          
                           _buildTextField(
                             controller: _emailCtrl,
                             label: "Email",
@@ -165,7 +177,6 @@ class _LoginPageState extends State<LoginPage> {
                             keyboardType: TextInputType.emailAddress,
                           ),
                           const SizedBox(height: 20),
-                          
                           _buildTextField(
                             controller: _passwordCtrl,
                             label: "Password",
@@ -175,7 +186,6 @@ class _LoginPageState extends State<LoginPage> {
                             toggleVisibility: () => setState(() => _isObscure = !_isObscure),
                           ),
                           const SizedBox(height: 32),
-                          
                           SizedBox(
                             width: double.infinity,
                             height: 55,

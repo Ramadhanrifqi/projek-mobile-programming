@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
+import 'user_info.dart';
 
-// Inisialisasi instance Dio dengan konfigurasi dasar
 final Dio dio = Dio(BaseOptions(
-  // Untuk Browser, gunakan localhost
-  baseUrl: 'http://localhost:8000/api/', 
+  baseUrl: 'http://localhost:8000/api/', // Ganti ke 10.0.2.2 jika pakai emulator
   connectTimeout: 5000,
   receiveTimeout: 3000,
   headers: {
@@ -13,41 +12,47 @@ final Dio dio = Dio(BaseOptions(
 ));
 
 class ApiClient {
-  // Fungsi GET
+  ApiClient() {
+    dio.interceptors.clear();
+    dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        // Otomatis ambil token dari UserInfo
+        String? token = UserInfo.token;
+        if (token != null) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        return handler.next(options);
+      },
+    ));
+  }
+
   Future<Response> get(String path) async {
     try {
-      final response = await dio.get(Uri.encodeFull(path));
-      return response;
+      return await dio.get(path);
     } on DioError catch (e) {
       throw Exception(e.message);
     }
   }
 
-  // Fungsi POST
   Future<Response> post(String path, dynamic data) async {
     try {
-      final response = await dio.post(Uri.encodeFull(path), data: data);
-      return response;
+      return await dio.post(path, data: data);
     } on DioError catch (e) {
       throw Exception(e.message);
     }
   }
 
-  // Fungsi PUT (update)
   Future<Response> put(String path, dynamic data) async {
     try {
-      final response = await dio.put(Uri.encodeFull(path), data: data);
-      return response;
+      return await dio.put(path, data: data);
     } on DioError catch (e) {
       throw Exception(e.message);
     }
   }
 
-  // Fungsi DELETE
   Future<Response> delete(String path) async {
     try {
-      final response = await dio.delete(Uri.encodeFull(path));
-      return response;
+      return await dio.delete(path);
     } on DioError catch (e) {
       throw Exception(e.message);
     }

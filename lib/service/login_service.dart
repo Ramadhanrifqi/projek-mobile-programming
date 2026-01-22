@@ -2,20 +2,25 @@ import '../helpers/api_client.dart';
 import '../model/user.dart';
 
 class LoginService {
-  Future<User?> login(String email, String password) async {
+  // TAMBAHKAN BARIS INI agar _apiClient tidak MERAH
+  final ApiClient _apiClient = ApiClient();
+
+  Future<Map<String, dynamic>?> login(String email, String password) async {
     try {
-      // Key harus 'email' agar terbaca oleh AuthController Laravel
-      final response = await ApiClient().post('login', {
+      final response = await _apiClient.post('login', {
         'email': email,
         'password': password,
       });
 
       if (response.statusCode == 200) {
-        return User.fromJson(response.data);
+        // Mengembalikan Map yang berisi data user dan token dari Laravel
+        return {
+          'user': User.fromJson(response.data['user']),
+          'token': response.data['token'],
+        };
       }
       return null;
     } catch (e) {
-      print("Login error: $e");
       return null;
     }
   }

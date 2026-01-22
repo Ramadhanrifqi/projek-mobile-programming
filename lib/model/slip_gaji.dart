@@ -1,5 +1,6 @@
 class SlipGaji {
   String? id;
+  String? userId;
   String? bulan;
   String? tahun;
   int? gajiPokok;
@@ -9,6 +10,7 @@ class SlipGaji {
 
   SlipGaji({
     this.id,
+    this.userId,
     this.bulan,
     this.tahun,
     this.gajiPokok,
@@ -17,9 +19,9 @@ class SlipGaji {
     this.totalGaji,
   });
 
-  // Mengubah JSON dari API menjadi Objek Dart
   factory SlipGaji.fromJson(Map<String, dynamic> json) => SlipGaji(
         id: json["id"].toString(),
+        userId: json["user_id"].toString(),
         bulan: json["bulan"],
         tahun: json["tahun"].toString(),
         gajiPokok: json["gaji_pokok"],
@@ -28,9 +30,9 @@ class SlipGaji {
         totalGaji: json["total_gaji"],
       );
 
-  // (Opsional) Mengubah Objek Dart kembali ke JSON
+  // TAMBAHKAN FUNGSI INI AGAR MERAHNYA HILANG:
   Map<String, dynamic> toJson() => {
-        "id": id,
+        "user_id": userId,
         "bulan": bulan,
         "tahun": tahun,
         "gaji_pokok": gajiPokok,

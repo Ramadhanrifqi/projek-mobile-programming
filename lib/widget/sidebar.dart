@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projek/ui/slip_gaji_detail_page.dart';
 import '../ui/beranda.dart';
 import '../ui/login.dart'; // Pastikan nama file sesuai (LoginPage)
 import '../ui/cuti_page.dart';
@@ -74,7 +75,7 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = UserInfo.user;
+    final user = UserInfo.loginUser;
 
     return Drawer(
       child: Container(
@@ -132,11 +133,31 @@ class Sidebar extends StatelessWidget {
                             destination: const CutiPage(),
                           ),
                           _buildListTile(
-                            context,
-                            icon: Icons.money,
-                            title: "Slip Gaji",
-                            destination: const SlipGajiPage(),
-                          ),
+  context,
+  icon: Icons.money,
+  title: "Slip Gaji",
+  onTap: () {
+    Navigator.pop(context); // Tutup Sidebar dulu
+    
+    // Cek Peran User
+    if (UserInfo.role?.toLowerCase() == 'admin') {
+      // Jika Admin -> Buka halaman daftar semua karyawan
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const SlipGajiPage()),
+      );
+    } else {
+      // Jika Karyawan -> Buka halaman riwayat gaji miliknya sendiri
+      // Kita kirim UserInfo.loginUser sebagai parameter 'user'
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SlipGajiDetailPage(user: UserInfo.loginUser!),
+        ),
+      );
+    }
+  },
+),
                           _buildListTile(
                             context,
                             icon: Icons.calendar_month,

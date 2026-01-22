@@ -1,25 +1,25 @@
 import '../model/user.dart';
 
 class UserInfo {
-  // Menyimpan data pengguna yang sedang login
   static User? loginUser;
+  static String? token; 
 
-  // Method untuk menyetel data user yang sedang login
-static void setUser(User user) {
-  loginUser = user;
-  print("Role user saat ini: ${user.role}"); // Cek di Debug Console
-}
-  bool isAdmin = UserInfo.role?.toLowerCase() == 'admin';
+  static void setUser(User user, String userToken) {
+    loginUser = user;
+    token = userToken;
+  }
 
-  // Getter untuk mengambil objek User yang sedang login
-  static User? get user => loginUser;
-
-  // Getter untuk mengambil peran/role dari user
+  static bool get isAdmin => loginUser?.role?.toLowerCase() == 'admin';
   static String? get role => loginUser?.role;
+  static String? get userId => loginUser?.id?.toString();
+  static String? get name => loginUser?.name;
+  static String? get email => loginUser?.email;
 
-  // Getter untuk mengambil ID dari user
-  static String? get userId => loginUser?.id;
+  // TAMBAHKAN BARIS INI agar file lain tidak MERAH
+  static String? get username => loginUser?.email; 
 
-  // Getter untuk mengambil username dari user
-  static String? get username => loginUser?.email;
+  static void logout() {
+    loginUser = null;
+    token = null;
+  }
 }

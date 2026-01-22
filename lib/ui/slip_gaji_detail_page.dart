@@ -1,83 +1,258 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Untuk format rupiah yang rapi
+import '../model/user.dart';
 import '../model/slip_gaji.dart';
-import 'package:intl/intl.dart'; // Tambahkan package intl di pubspec.yaml
+import '../service/slip_gaji_service.dart';
+import '../helpers/user_info.dart';
+import 'slip_gaji_form_page.dart';
 
-class SlipGajiDetailPage extends StatelessWidget {
-  final SlipGaji slip;
-
-  const SlipGajiDetailPage({super.key, required this.slip});
-
-  // Fungsi format Rupiah
-  String formatRupiah(int? nominal) {
-    return NumberFormat.currency(locale: 'id', symbol: 'Rp ', decimalDigits: 0)
-        .format(nominal ?? 0);
-  }
+class SlipGajiDetailPage extends StatefulWidget {
+  final User user;
+  const SlipGajiDetailPage({super.key, required this.user});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Detail Slip Gaji"),
+  State<SlipGajiDetailPage> createState() => _SlipGajiDetailPageState();
+}
+
+class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
+  List<SlipGaji> _allRiwayat = [];
+  List<SlipGaji> _filteredRiwayat = [];
+  bool _isLoading = true;
+  final TextEditingController _searchCtrl = TextEditingController();
+  final NumberFormat _formatter = NumberFormat.decimalPattern('id');
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRiwayat();
+  }
+
+  Future<void> _fetchRiwayat() async {
+    setState(() => _isLoading = true);
+    final allSlip = await SlipGajiService().getAllSlip();
+    
+    List<SlipGaji> filtered = allSlip.where((s) => s.userId == widget.user.id.toString()).toList();
+    
+    // Urutkan: Terbaru di atas
+    filtered.sort((a, b) {
+      int idA = int.tryParse(a.id.toString()) ?? 0;
+      int idB = int.tryParse(b.id.toString()) ?? 0;
+      return idB.compareTo(idA); 
+    });
+
+    setState(() {
+      _allRiwayat = filtered;
+      _filteredRiwayat = filtered;
+      _isLoading = false;
+    });
+  }
+
+  void _runFilter(String keyword) {
+    List<SlipGaji> results = [];
+    if (keyword.isEmpty) {
+      results = _allRiwayat;
+    } else {
+      results = _allRiwayat.where((s) {
+        final bulan = (s.bulan ?? "").toLowerCase();
+        final tahun = (s.tahun ?? "").toLowerCase();
+        return bulan.contains(keyword.toLowerCase()) || tahun.contains(keyword.toLowerCase());
+      }).toList();
+    }
+    setState(() => _filteredRiwayat = results);
+  }
+
+  // --- POP UP DETAIL SELURUH GAJI ---
+  void _showRincianDialog(SlipGaji slip) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
-      ),
-      body: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF192524), Color(0xFF3C5759)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFFD1EBDB), width: 1),
         ),
-        child: Column(
+        title: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white24),
-              ),
-              child: Column(
-                children: [
-                  const Icon(Icons.account_balance_wallet, color: Colors.tealAccent, size: 50),
-                  const SizedBox(height: 10),
-                  Text("${slip.bulan} ${slip.tahun}",
-                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                  const Divider(color: Colors.white24, height: 30),
-                  
-                  _rowDetail("Gaji Pokok", formatRupiah(slip.gajiPokok)),
-                  _rowDetail("Tunjangan", formatRupiah(slip.tunjangan)),
-                  _rowDetail("Potongan", "- ${formatRupiah(slip.potongan)}", isNegative: true),
-                  
-                  const Divider(color: Colors.white24, height: 30),
-                  _rowDetail("Total Gaji Bersih", formatRupiah(slip.totalGaji), isTotal: true),
-                ],
-              ),
-            ),
+            const Icon(Icons.receipt_long, color: Color(0xFFD1EBDB), size: 40),
+            const SizedBox(height: 10),
+            Text("Detail Slip Gaji", 
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            Text("${slip.bulan} ${slip.tahun}", 
+              style: const TextStyle(color: Colors.white70, fontSize: 14)),
           ],
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Divider(color: Colors.white24),
+            _rowDetail("Gaji Pokok", slip.gajiPokok),
+            _rowDetail("Tunjangan", slip.tunjangan),
+            _rowDetail("Potongan", slip.potongan, isMinus: true),
+            const Divider(color: Colors.white24, thickness: 1),
+            _rowDetail("Total Bersih", slip.totalGaji, isTotal: true),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("TUTUP", 
+                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _rowDetail(String label, String value, {bool isNegative = false, bool isTotal = false}) {
+  Widget _rowDetail(String label, dynamic value, {bool isMinus = false, bool isTotal = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.white70, fontSize: isTotal ? 16 : 14)),
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 15)),
           Text(
-            value,
+            "${isMinus ? '- ' : ''}Rp ${_formatter.format(int.tryParse(value.toString()) ?? 0)}",
             style: TextStyle(
-              color: isNegative ? Colors.redAccent : (isTotal ? Colors.tealAccent : Colors.white),
+              color: isTotal ? const Color(0xFFD1EBDB) : (isMinus ? Colors.redAccent : Colors.white),
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              fontSize: isTotal ? 18 : 14,
+              fontSize: isTotal ? 16 : 15,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // --- DIALOG KONFIRMASI HAPUS ---
+  void _konfirmasiHapus(SlipGaji slip) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25), side: const BorderSide(color: Colors.redAccent, width: 2)),
+        title: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 50),
+        content: Text("Hapus riwayat gaji ${slip.bulan} ${slip.tahun}?", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("BATAL", style: TextStyle(color: Colors.white54))),
+              const SizedBox(width: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                onPressed: () async {
+                  bool sukses = await SlipGajiService().hapus(slip.id.toString());
+                  if (!mounted) return;
+                  Navigator.pop(ctx);
+                  if (sukses) { _fetchRiwayat(); }
+                },
+                child: const Text("HAPUS", style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isAdmin = UserInfo.role?.toLowerCase() == 'admin';
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text("Riwayat: ${widget.user.name}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent, elevation: 0, iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF192524), Color(0xFF3C5759)],
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // KOLOM PENCARIAN
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: TextField(
+                  controller: _searchCtrl,
+                  onChanged: (value) => _runFilter(value),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: "Cari bulan atau tahun...",
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    prefixIcon: const Icon(Icons.search, color: Color(0xFFD1EBDB)),
+                    filled: true, fillColor: Colors.white.withOpacity(0.1),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                  ),
+                ),
+              ),
+
+              // LIST RIWAYAT
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
+                    : _filteredRiwayat.isEmpty
+                        ? const Center(child: Text("Data tidak ditemukan.", style: TextStyle(color: Colors.white60)))
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            itemCount: _filteredRiwayat.length,
+                            itemBuilder: (context, index) => _buildHistoryCard(_filteredRiwayat[index], isAdmin),
+                          ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton.extended(
+              backgroundColor: const Color(0xFFD1EBDB),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => SlipGajiFormPage(targetUser: widget.user)))
+                    .then((value) { if (value == true) _fetchRiwayat(); });
+              },
+              icon: const Icon(Icons.add, color: Color(0xFF192524)),
+              label: const Text("Tambah Slip", style: TextStyle(color: Color(0xFF192524), fontWeight: FontWeight.bold)),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildHistoryCard(SlipGaji slip, bool isAdmin) {
+    return Card(
+      color: Colors.white.withOpacity(0.05),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        onTap: () => _showRincianDialog(slip), // KLIK UNTUK MUNCULKAN POP UP DETAIL
+        title: Text("${slip.bulan} ${slip.tahun}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        subtitle: Text("Total: Rp ${_formatter.format(slip.totalGaji)}", style: const TextStyle(color: Color(0xFFD1EBDB))),
+        trailing: isAdmin
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_note, color: Colors.amberAccent),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => SlipGajiFormPage(slip: slip, targetUser: widget.user)))
+                          .then((value) { if (value == true) _fetchRiwayat(); });
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    onPressed: () => _konfirmasiHapus(slip),
+                  ),
+                ],
+              )
+            : const Icon(Icons.info_outline, color: Colors.white54),
       ),
     );
   }
