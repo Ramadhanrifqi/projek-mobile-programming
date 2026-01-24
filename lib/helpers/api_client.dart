@@ -3,8 +3,8 @@ import 'user_info.dart';
 
 final Dio dio = Dio(BaseOptions(
   baseUrl: 'http://localhost:8000/api/', // Ganti ke 10.0.2.2 jika pakai emulator
-  connectTimeout: 5000,
-  receiveTimeout: 3000,
+  connectTimeout: Duration(milliseconds: 5000),
+  receiveTimeout: Duration(milliseconds: 3000),
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

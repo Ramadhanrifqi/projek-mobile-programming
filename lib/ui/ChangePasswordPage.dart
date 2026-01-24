@@ -62,13 +62,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           side: const BorderSide(color: Colors.greenAccent, width: 2),
         ),
         title: const Center(
-          child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 60),
+          child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
         ),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text("Berhasil!", 
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+              style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 18)),
             SizedBox(height: 10),
             Text(
               "Password Anda telah berhasil diperbarui. Gunakan password baru Anda untuk masuk kembali.",

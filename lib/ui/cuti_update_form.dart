@@ -34,20 +34,33 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     _statusCtrl.text = widget.cuti.status ?? 'Pending';
   }
 
-  // --- DIALOG SUKSES RATA TENGAH ---
+  // --- REVISI: DIALOG SUKSES DENGAN TEKS "BERHASIL" ---
   void _showSuccessDialog(String message) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
-         shape: RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          // Fixed: Remove isSuccess usage, use a neutral border color
           side: const BorderSide(color: Colors.greenAccent, width: 2),
         ),
-        title: const Center(
-          child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Center(
+              child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "Berhasil",
+              style: TextStyle(
+                color: Colors.greenAccent, 
+                fontWeight: FontWeight.bold, 
+                fontSize: 18, // Ukuran teks Berhasil
+              ),
+            ),
+          ],
         ),
         content: Text(
           message,
@@ -61,7 +74,8 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
                 Navigator.pop(ctx);
                 Navigator.pop(context, true);
               },
-              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+              child: const Text("OK", 
+                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold, fontSize: 18)),
             ),
           )
         ],
@@ -69,7 +83,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     );
   }
 
-  // --- DIALOG ERROR RATA TENGAH ---
+  // --- REVISI: DIALOG ERROR DENGAN TEKS "GAGAL" ---
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -77,13 +91,24 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
         backgroundColor: const Color(0xFF192524),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          // Fixed: Remove isSuccess usage, use a neutral border color
-          side: const BorderSide(color: Colors.greenAccent, width: 2),
+          side: const BorderSide(color: Colors.redAccent, width: 2),
         ),
-        title: const Text(
-          "Gagal",
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Center(
+              child: Icon(Icons.error_outline, color: Colors.redAccent, size: 50),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "Gagal",
+              style: TextStyle(
+                color: Colors.redAccent, 
+                fontWeight: FontWeight.bold, 
+                fontSize: 18, // Ukuran teks Gagal
+              ),
+            ),
+          ],
         ),
         content: Text(
           message,
@@ -94,7 +119,8 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
           Center(
             child: TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB))),
+              child: const Text("OK", 
+                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold, fontSize: 18)),
             ),
           )
         ],

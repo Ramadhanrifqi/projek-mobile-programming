@@ -21,11 +21,13 @@ class _CutiFormState extends State<CutiForm> {
   final _alasanCtrl = TextEditingController();
 
   bool _isSaving = false;
+  List<Cuti> _existingCuti = [];
 
   @override
   void initState() {
     super.initState();
     _loadInitialData();
+    _loadExistingData();
   }
 
   Future<void> _loadInitialData() async {
@@ -35,33 +37,76 @@ class _CutiFormState extends State<CutiForm> {
     });
   }
 
-  // --- REVISI: DIALOG DENGAN TEKS & TOMBOL DI TENGAH ---
+  Future<void> _loadExistingData() async {
+    final data = await CutiService().listData();
+    setState(() {
+      _existingCuti = data.where((c) => 
+        c.ajukanCuti?.toLowerCase() == UserInfo.username?.toLowerCase()
+      ).toList();
+    });
+  }
+
+  // --- REVISI: DIALOG YANG MENUNGGU KLIK OK UNTUK PINDAH HALAMAN ---
   void _showMessageDialog(String title, String message, {bool isSuccess = false}) {
     showDialog(
       context: context,
+      barrierDismissible: false, // User wajib klik OK, tidak bisa asal klik luar
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          // Fixed: Remove isSuccess usage, use a neutral border color
-          side: const BorderSide(color: Colors.greenAccent, width: 2),
+          borderRadius: BorderRadius.circular(25),
+          side: BorderSide(
+            color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
+            width: 2,
+          ),
         ),
-        
-        title: Text(
-          title, 
-          textAlign: TextAlign.center, // Judul di tengah
-          style: TextStyle(color: isSuccess ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Icon(
+                isSuccess ? Icons.check_circle : Icons.error_outline, 
+                color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
+                size: 50,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title, 
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isSuccess ? Colors.greenAccent : Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
         ),
         content: Text(
           message, 
-          textAlign: TextAlign.center, // Pesan di tengah
-          style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white70 ),
         ),
         actions: [
-          Center( // Tombol di tengah
+          Center(
             child: TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+              onPressed: () {
+                // 1. Tutup Dialog-nya dulu
+                Navigator.pop(ctx); 
+                
+                // 2. Jika ini dialog sukses, barulah tutup halaman Form-nya
+                if (isSuccess) {
+                  Navigator.pop(context, true); 
+                }
+              },
+              child: Text(
+                "OK", 
+                style: TextStyle(
+                  color: isSuccess ? const Color(0xFFD1EBDB) : Colors.redAccent, 
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 18,
+                ),
+              ),
             ),
           )
         ],
@@ -77,13 +122,10 @@ class _CutiFormState extends State<CutiForm> {
         title: const Text("Pengajuan Cuti", 
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0, centerTitle: true, iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
-        width: double.infinity,
-        height: double.infinity,
+        width: double.infinity, height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
@@ -115,7 +157,6 @@ class _CutiFormState extends State<CutiForm> {
                           const Text('Buat Pengajuan Baru', 
                             style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 32),
-                          
                           _buildModernField(_namaLengkapCtrl, "Nama Pegawai", Icons.person_outline, readOnly: true),
                           const SizedBox(height: 16),
                           _buildDateField(_tanggalMulaiCtrl, "Tanggal Mulai", Icons.calendar_today_outlined),
@@ -124,7 +165,6 @@ class _CutiFormState extends State<CutiForm> {
                           const SizedBox(height: 16),
                           _buildModernField(_alasanCtrl, "Alasan Cuti", Icons.description_outlined, maxLines: 3),
                           const SizedBox(height: 32),
-                          
                           _isSaving 
                             ? const CircularProgressIndicator(color: Color(0xFFD1EBDB)) 
                             : _buildSubmitButton(),
@@ -143,34 +183,53 @@ class _CutiFormState extends State<CutiForm> {
 
   Widget _buildSubmitButton() {
     return SizedBox(
-      width: double.infinity, 
-      height: 55,
+      width: double.infinity, height: 55,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFD1EBDB), 
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         ),
         onPressed: () async {
           if (_formKey.currentState!.validate()) {
             setState(() => _isSaving = true);
             
             try {
-              String tglMulaiStr = _tanggalMulaiCtrl.text.trim();
-              String tglSelesaiStr = _tanggalSelesaiCtrl.text.trim();
-
-              DateTime mulai = DateTime.parse(tglMulaiStr);
-              DateTime selesai = DateTime.parse(tglSelesaiStr);
-              DateTime sekarang = DateTime.now();
-              DateTime hariIni = DateTime(sekarang.year, sekarang.month, sekarang.day);
-
-              if (mulai.difference(hariIni).inDays < 7) {
-                _showMessageDialog("Peringatan", "Pengajuan cuti minimal 1 minggu sebelum hari-H");
+              // 1. Validasi Pending
+              int pendingCount = _existingCuti.where((c) => c.status?.toLowerCase() == 'pending').length;
+              if (pendingCount >= 2) {
+                _showMessageDialog("Peringatan", "Anda memiliki 2 pengajuan pending. Silahkan tunggu konfirmasi admin.");
                 setState(() => _isSaving = false);
                 return;
               }
 
+              String tglMulaiStr = _tanggalMulaiCtrl.text.trim();
+              String tglSelesaiStr = _tanggalSelesaiCtrl.text.trim();
+
+              // 2. Cek Bentrok
+              bool isBentrok = _existingCuti.any((c) => 
+                c.tanggalMulai == tglMulaiStr || c.tanggalSelesai == tglSelesaiStr
+              );
+              if (isBentrok) {
+                _showMessageDialog("Gagal", "Anda sudah memiliki pengajuan di tanggal tersebut.");
+                setState(() => _isSaving = false);
+                return;
+              }
+
+              DateTime mulai = DateTime.parse(tglMulaiStr);
+              DateTime selesai = DateTime.parse(tglSelesaiStr);
+              DateTime hariIni = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+
+              // 3. Validasi H-7
+              if (mulai.difference(hariIni).inDays < 7) {
+                _showMessageDialog("Peringatan", "Pengajuan cuti minimal harus dilakukan 7 hari sebelum tanggal mulai.");
+                setState(() => _isSaving = false);
+                return;
+              }
+
+              // 4. Validasi 4 Hari
               int durasi = selesai.difference(mulai).inDays + 1;
               if (durasi > 4) {
-                _showMessageDialog("Peringatan", "Sekali pengajuan maksimal hanya boleh 4 hari");
+                _showMessageDialog("Peringatan", "Sekali pengajuan maksimal hanya boleh 4 hari.");
                 setState(() => _isSaving = false);
                 return;
               }
@@ -181,82 +240,47 @@ class _CutiFormState extends State<CutiForm> {
                 return;
               }
 
-              Cuti cuti = Cuti(
-                ajukanCuti: UserInfo.username, 
-                tanggalMulai: tglMulaiStr,
-                tanggalSelesai: tglSelesaiStr,
-                alasan: _alasanCtrl.text,
-                status: 'Pending',
-              );
+              Map<String, dynamic> data = {
+                "nama": UserInfo.username, 
+                "tanggalMulai": tglMulaiStr,
+                "tanggalSelesai": tglSelesaiStr,
+                "alasan": _alasanCtrl.text,
+                "Status": 'Pending',
+              };
 
-              await CutiService().simpan(cuti).then((value) {
-                // --- REVISI: DIALOG SUKSES DENGAN TEKS & TOMBOL DI TENGAH ---
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (ctx) => AlertDialog(
-                    backgroundColor: const Color(0xFF192524),
-                    shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          // Fixed: Remove isSuccess usage, use a neutral border color
-          side: const BorderSide(color: Colors.greenAccent, width: 2),
-        ),
-                    title: const Center( // Judul/Icon di tengah
-                      child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
-                    ),
-                    content: const Text(
-                      "Pengajuan Berhasil Dikirim!", 
-                      textAlign: TextAlign.center, // Teks di tengah
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
-                    ),
-                    actions: [
-                      Center( // Tombol di tengah
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            Navigator.pop(context, true);
-                          },
-                          child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
-                        ),
-                      )
-                    ],
-                  ),
-                );
-              });
+              final result = await CutiService().simpan(data);
 
+              if (result['success']) {
+                if (!mounted) return;
+                // Panggil dialog sukses. Navigasi pop sudah ditangani di dalam fungsi ini saat klik OK.
+                _showMessageDialog("Berhasil", "Pengajuan Berhasil Dikirim!", isSuccess: true);
+              } else {
+                _showMessageDialog("Gagal Mengajukan", result['message']);
+              }
             } catch (e) {
-              _showMessageDialog("Error", "Terjadi kesalahan koneksi atau format data");
+              _showMessageDialog("Error", "Terjadi kesalahan sistem.");
             } finally {
               if (mounted) setState(() => _isSaving = false);
             }
           }
         },
-        child: const Text("KIRIM PENGAJUAN", 
-          style: TextStyle(color: Color(0xFF192524), fontWeight: FontWeight.bold)),
+        child: const Text("KIRIM PENGAJUAN", style: TextStyle(color: Color(0xFF192524), fontWeight: FontWeight.bold)),
       ),
     );
   }
 
   Widget _buildDateField(TextEditingController ctrl, String label, IconData icon) {
     return TextFormField(
-      controller: ctrl, 
-      readOnly: true, 
-      style: const TextStyle(color: Colors.white),
+      controller: ctrl, readOnly: true, style: const TextStyle(color: Colors.white),
       decoration: _inputDecoration(label, icon),
       onTap: () async {
         DateTime? picked = await showDatePicker(
-          context: context, 
-          initialDate: DateTime.now().add(const Duration(days: 7)),
-          firstDate: DateTime.now(), 
-          lastDate: DateTime(2100),
+          context: context, initialDate: DateTime.now().add(const Duration(days: 7)),
+          firstDate: DateTime.now(), lastDate: DateTime(2100),
           builder: (context, child) {
             return Theme(
               data: Theme.of(context).copyWith(
-                colorScheme: const ColorScheme.dark(
-                  primary: Color(0xFFD1EBDB),
-                  onPrimary: Color(0xFF192524),
-                  surface: Color(0xFF203A43),
-                ),
+                colorScheme: const ColorScheme.dark(primary: Color(0xFFD1EBDB), onPrimary: Color(0xFF192524), surface: Color(0xFF203A43)),
               ),
               child: child!,
             );
@@ -274,10 +298,7 @@ class _CutiFormState extends State<CutiForm> {
 
   Widget _buildModernField(TextEditingController ctrl, String label, IconData icon, {bool readOnly = false, int maxLines = 1}) {
     return TextFormField(
-      controller: ctrl, 
-      readOnly: readOnly, 
-      maxLines: maxLines, 
-      style: const TextStyle(color: Colors.white),
+      controller: ctrl, readOnly: readOnly, maxLines: maxLines, style: const TextStyle(color: Colors.white),
       decoration: _inputDecoration(label, icon),
       validator: (v) => v == null || v.isEmpty ? "$label wajib diisi" : null,
     );
@@ -285,11 +306,9 @@ class _CutiFormState extends State<CutiForm> {
 
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
-      labelText: label, 
-      labelStyle: const TextStyle(color: Colors.white70),
+      labelText: label, labelStyle: const TextStyle(color: Colors.white70),
       prefixIcon: Icon(icon, color: const Color(0xFFD1EBDB), size: 20),
-      filled: true, 
-      fillColor: Colors.white.withOpacity(0.05),
+      filled: true, fillColor: Colors.white.withOpacity(0.05),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFD1EBDB))),
     );

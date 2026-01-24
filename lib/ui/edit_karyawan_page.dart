@@ -93,7 +93,7 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
           children: [
             Text(title, 
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+              style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 10),
             Text(message, 
               textAlign: TextAlign.center, 

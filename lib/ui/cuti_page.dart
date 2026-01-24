@@ -37,7 +37,6 @@ class _CutiPageState extends State<CutiPage> {
 
       final isAdmin = UserInfo.role?.toLowerCase() == 'admin';
 
-      // 1. Filter awal berdasarkan user yang login
       List<Cuti> rawList = isAdmin
           ? data
           : data.where((cuti) {
@@ -45,7 +44,6 @@ class _CutiPageState extends State<CutiPage> {
                   UserInfo.username?.toLowerCase().trim();
             }).toList();
 
-      // 2. Urutkan: ID Terbesar (Paling Baru) di atas
       rawList.sort((a, b) {
         int idA = int.tryParse(a.id.toString()) ?? 0;
         int idB = int.tryParse(b.id.toString()) ?? 0;
@@ -54,7 +52,7 @@ class _CutiPageState extends State<CutiPage> {
 
       setState(() {
         _allCutiList = rawList;
-        _filteredCutiList = rawList; // Tampilkan semua saat pertama load
+        _filteredCutiList = rawList; 
         _isLoading = false;
       });
     } catch (e) {
@@ -63,7 +61,6 @@ class _CutiPageState extends State<CutiPage> {
     }
   }
 
-  // 3. Fungsi Pencarian berdasarkan Nama
   void _runFilter(String keyword) {
     List<Cuti> results = [];
     if (keyword.isEmpty) {
@@ -89,7 +86,7 @@ class _CutiPageState extends State<CutiPage> {
     }
   }
 
-  // --- DIALOG-DIALOG (Tetap Sama) ---
+  // --- REVISI: DIALOG SUKSES DENGAN ICON + TEKS BERHASIL ---
   void _showSuccessDialog(String message) {
     showDialog(
       context: context,
@@ -98,41 +95,34 @@ class _CutiPageState extends State<CutiPage> {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: const BorderSide(color: Colors.greenAccent, width: 2)),
-        title: const Center(
-            child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 50)),
-        content: Text(message,
-            textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
+            const SizedBox(height: 10),
+            const Text(
+              "Berhasil",
+              style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18),
+            ),
+            const SizedBox(height: 15),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
         actions: [
           Center(
-              child: TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text("OK",
-                      style: TextStyle(
-                          color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold))))
-        ],
-      ),
-    );
-  }
-
-  void _showErrorDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF192524),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Colors.redAccent, width: 2)),
-        title: Text(title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: Colors.redAccent, fontWeight: FontWeight.bold)),
-        content: Text(message,
-            textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
-        actions: [
-          Center(
-              child: TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB)))))
+            child: TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("OK",
+                    style: TextStyle(
+                        color: Color(0xFFD1EBDB),
+                        fontWeight: FontWeight.bold))))
         ],
       ),
     );
@@ -146,10 +136,10 @@ class _CutiPageState extends State<CutiPage> {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: const BorderSide(color: Colors.orangeAccent, width: 2)),
+        icon: const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 50),
         title: const Text("Peringatan Reset!",
             textAlign: TextAlign.center,
-            style: TextStyle(
-                color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
+            style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 18)),
         content: const Text(
           "Tindakan ini akan mengembalikan jatah cuti semua karyawan ke 14 hari DAN MENGHAPUS SELURUH RIWAYAT. Anda yakin?",
           textAlign: TextAlign.center,
@@ -167,23 +157,15 @@ class _CutiPageState extends State<CutiPage> {
                 onPressed: () async {
                   Navigator.pop(ctx);
                   setState(() => _isLoading = true);
-                  try {
-                    bool success = await CutiService().resetCutiSemua();
-                    if (success) {
-                      _showSuccessDialog("Jatah direset & riwayat dikosongkan!");
-                      getData();
-                    } else {
-                      _showErrorDialog("Gagal", "Sistem tidak dapat mereset data.");
-                    }
-                  } catch (e) {
-                    _showErrorDialog("Error", e.toString());
-                  } finally {
-                    setState(() => _isLoading = false);
+                  bool success = await CutiService().resetCutiSemua();
+                  if (success) {
+                    _showSuccessDialog("Jatah direset & riwayat dikosongkan!");
+                    getData();
                   }
+                  setState(() => _isLoading = false);
                 },
                 child: const Text("Ya, Reset",
-                    style: TextStyle(
-                        color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -200,19 +182,17 @@ class _CutiPageState extends State<CutiPage> {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: const BorderSide(color: Colors.redAccent, width: 2)),
+        icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 50),
         title: const Text("Hapus Pengajuan",
             textAlign: TextAlign.center,
-            style: TextStyle(
-                color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
+            style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 18)),
         content: const Text("Apakah Anda yakin ingin menghapus data pengajuan ini?",
             textAlign: TextAlign.center, style: TextStyle(color: Colors.white70)),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text("Batal", style: TextStyle(color: Colors.white54))),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal", style: TextStyle(color: Colors.white54))),
               const SizedBox(width: 20),
               TextButton(
                 onPressed: () async {
@@ -223,9 +203,7 @@ class _CutiPageState extends State<CutiPage> {
                     getData();
                   }
                 },
-                child: const Text("Hapus",
-                    style: TextStyle(
-                        color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                child: const Text("Hapus", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -262,47 +240,42 @@ class _CutiPageState extends State<CutiPage> {
         child: SafeArea(
           child: Column(
             children: [
-              // --- SEARCH BAR ---
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: TextField(
-                  controller: _searchCtrl,
-                  onChanged: (value) => _runFilter(value),
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: "Cari nama pengaju...",
-                    hintStyle: const TextStyle(color: Colors.white54),
-                    prefixIcon: const Icon(Icons.search, color: Color(0xFFD1EBDB)),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide.none,
+              if (isAdmin)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: TextField(
+                    controller: _searchCtrl,
+                    onChanged: (value) => _runFilter(value),
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: "Cari nama pengaju...",
+                      hintStyle: const TextStyle(color: Colors.white54),
+                      prefixIcon: const Icon(Icons.search, color: Color(0xFFD1EBDB)),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              // --- LIST CONTENT ---
               Expanded(
                 child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
                     : RefreshIndicator(
                         onRefresh: getData,
                         color: const Color(0xFFD1EBDB),
                         child: _filteredCutiList.isEmpty
-                            ? const Center(
-                                child: Text("Data tidak ditemukan.",
-                                    style: TextStyle(color: Colors.white60)))
+                            ? const Center(child: Text("Data tidak ditemukan.", style: TextStyle(color: Colors.white60)))
                             : ListView.builder(
                                 padding: const EdgeInsets.all(16),
                                 itemCount: _filteredCutiList.length,
                                 itemBuilder: (context, index) {
                                   final cuti = _filteredCutiList[index];
-                                  final namaTampil =
-                                      getNamaAsli(cuti.ajukanCuti ?? '');
+                                  final namaTampil = getNamaAsli(cuti.ajukanCuti ?? '');
                                   return _buildCutiCard(cuti, isAdmin, namaTampil);
                                 },
                               ),
@@ -318,14 +291,11 @@ class _CutiPageState extends State<CutiPage> {
               onPressed: () => _konfirmasiResetJatah(),
               icon: const Icon(Icons.refresh, color: Colors.black87),
               label: const Text("Reset Jatah & Riwayat",
-                  style: TextStyle(
-                      color: Colors.black87, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
             )
           : FloatingActionButton(
               backgroundColor: const Color(0xFFD1EBDB),
-              onPressed: () => Navigator.push(
-                      context, MaterialPageRoute(builder: (context) => const CutiForm()))
-                  .then((_) => getData()),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CutiForm())).then((_) => getData()),
               child: const Icon(Icons.add, color: Color(0xFF192524)),
             ),
     );
@@ -346,20 +316,14 @@ class _CutiPageState extends State<CutiPage> {
         leading: const CircleAvatar(
             backgroundColor: Color(0xFFD1EBDB),
             child: Icon(Icons.calendar_today, color: Colors.black87)),
-        title: Text(namaTampil,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(namaTampil, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("${cuti.tanggalMulai} - ${cuti.tanggalSelesai}",
-                style: const TextStyle(color: Colors.white70)),
-            Text("Alasan: ${cuti.alasan ?? '-'}",
-                style: const TextStyle(
-                    color: Colors.white60, fontStyle: FontStyle.italic)),
+            Text("${cuti.tanggalMulai} - ${cuti.tanggalSelesai}", style: const TextStyle(color: Colors.white70)),
+            Text("Alasan: ${cuti.alasan ?? '-'}", style: const TextStyle(color: Colors.white60, fontStyle: FontStyle.italic)),
             const SizedBox(height: 4),
-            Text("Status: ${cuti.status}",
-                style: TextStyle(
-                    color: _getStatusColor(cuti.status), fontWeight: FontWeight.bold)),
+            Text("Status: ${cuti.status}", style: TextStyle(color: _getStatusColor(cuti.status), fontWeight: FontWeight.bold)),
           ],
         ),
         trailing: isAdmin
@@ -367,12 +331,7 @@ class _CutiPageState extends State<CutiPage> {
                 ? IconButton(
                     icon: const Icon(Icons.edit, color: Colors.white70),
                     onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => CutiUpdateFormPage(
-                                  cuti: cuti,
-                                  namaPengaju: namaTampil))).then((_) => getData());
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => CutiUpdateFormPage(cuti: cuti, namaPengaju: namaTampil))).then((_) => getData());
                     })
                 : null)
             : (status == 'pending' || status == 'ditolak'

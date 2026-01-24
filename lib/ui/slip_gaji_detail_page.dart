@@ -130,29 +130,109 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
   void _konfirmasiHapus(SlipGaji slip) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25), side: const BorderSide(color: Colors.redAccent, width: 2)),
-        title: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 50),
-        content: Text("Hapus riwayat gaji ${slip.bulan} ${slip.tahun}?", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25),
+          side: const BorderSide(color: Colors.redAccent, width: 2),
+        ),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.delete_outline, color: Colors.redAccent, size: 50),
+            const SizedBox(height: 10),
+            const Text(
+              "Hapus Slip Gaji",
+              style: TextStyle(
+                color: Colors.redAccent, 
+                fontWeight: FontWeight.bold, 
+                fontSize: 18
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          "Hapus riwayat gaji ${slip.bulan} ${slip.tahun}?\nData yang dihapus tidak dapat dikembalikan.", 
+          textAlign: TextAlign.center, 
+          style: const TextStyle(color: Colors.white70)
+        ),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("BATAL", style: TextStyle(color: Colors.white54))),
-              const SizedBox(width: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              // Tombol Batal Simpel
+              TextButton(
+                onPressed: () => Navigator.pop(ctx), 
+                child: const Text("Batal", style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold))
+              ),
+              const SizedBox(width: 30),
+              // Tombol Hapus Simpel
+              TextButton(
                 onPressed: () async {
-                  bool sukses = await SlipGajiService().hapus(slip.id.toString());
-                  if (!mounted) return;
                   Navigator.pop(ctx);
-                  if (sukses) { _fetchRiwayat(); }
+                  bool sukses = await SlipGajiService().hapus(slip.id.toString());
+                  if (sukses) {
+                    _showResultDialog("Berhasil", "Data riwayat gaji telah dihapus", true);
+                    _fetchRiwayat();
+                  } else {
+                    _showResultDialog("Gagal", "Terjadi kesalahan saat menghapus data", false);
+                  }
                 },
-                child: const Text("HAPUS", style: TextStyle(color: Colors.white)),
+                child: const Text("Hapus", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+
+  // --- REVISI: DIALOG HASIL (SUKSES/GAGAL) DENGAN TEKS BESAR ---
+  void _showResultDialog(String title, String message, bool isSuccess) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF192524),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25),
+          side: BorderSide(
+            color: isSuccess ? const Color(0xFFD1EBDB) : Colors.redAccent, 
+            width: 2
+          ),
+        ),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSuccess ? Icons.check_circle : Icons.error_outline, 
+              color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
+              size: 50
+            ),
+            const SizedBox(height: 10),
+            Text(
+              isSuccess ? "Berhasil" : "Gagal",
+              style: TextStyle(
+                color: isSuccess ? Colors.greenAccent : Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message, 
+          textAlign: TextAlign.center, 
+          style: const TextStyle(color: Colors.white70)
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          )
         ],
       ),
     );

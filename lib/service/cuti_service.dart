@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart'; 
 import '../helpers/api_client.dart';
 import '../model/cuti.dart';
 
 class CutiService {
   final ApiClient _apiClient = ApiClient();
 
-  /// Mengambil semua riwayat pengajuan cuti
   Future<List<Cuti>> listData() async {
     try {
       final response = await _apiClient.get('cuti');
@@ -21,44 +21,51 @@ class CutiService {
   }
 
   /// Mengirim pengajuan cuti baru ke server
-  Future simpan(Cuti cuti) async {
+  Future<Map<String, dynamic>> simpan(Map<String, dynamic> data) async {
     try {
-      final response = await _apiClient.post('cuti', cuti.toJson());
-      return response;
+      final response = await _apiClient.post('cuti', data);
+      return {'success': true, 'data': response.data};
+    } on DioException catch (e) {
+      // Menangkap error dari Laravel (422, 400, dll)
+      String msg = "Terjadi kesalahan";
+      
+      if (e.response != null && e.response!.data is Map) {
+        // Mengambil pesan "Anda memiliki 2 pengajuan pending" dsb
+        msg = e.response!.data['message'] ?? "Gagal memproses pengajuan";
+      } else {
+        msg = e.message ?? "Koneksi ke server terputus";
+      }
+
+      return {'success': false, 'message': msg};
     } catch (e) {
-      debugPrint("Error simpan Cuti: $e");
-      throw Exception("Gagal menyimpan pengajuan: $e");
+      // Menghilangkan e.toString() agar tidak muncul teks teknis panjang
+      return {'success': false, 'message': "Kesalahan Sistem: Hubungi Admin"};
     }
   }
 
-  /// Memperbarui data pengajuan (Status Disetujui/Ditolak oleh Admin)
   Future ubah(Cuti cuti, String id) async {
     try {
       final response = await _apiClient.put('cuti/$id', cuti.toJson());
       return response;
     } catch (e) {
       debugPrint("Error ubah Cuti: $e");
-      throw Exception("Gagal update data cuti: $e");
+      throw Exception("Gagal update data cuti");
     }
   }
 
-  /// Menghapus satu data pengajuan cuti
   Future hapus(String id) async {
     try {
       final response = await _apiClient.delete('cuti/$id');
       return response.data;
     } catch (e) {
       debugPrint("Error hapus Cuti: $e");
-      throw Exception("Gagal menghapus data cuti: $e");
+      throw Exception("Gagal menghapus data cuti");
     }
   }
 
-  /// Fungsi Admin: Reset jatah cuti tahunan dan hapus semua riwayat
   Future<bool> resetCutiSemua() async {
     try {
-      // Menggunakan GET sesuai dengan implementasi awal Anda
       final response = await _apiClient.get('cuti/reset-tahunan');
-      
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
       }

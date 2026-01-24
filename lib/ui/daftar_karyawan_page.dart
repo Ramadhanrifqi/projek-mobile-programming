@@ -12,8 +12,10 @@ class DaftarKaryawanPage extends StatefulWidget {
 }
 
 class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
-  List<User> _users = [];
+  List<User> _allUsers = []; // Data asli dari server
+  List<User> _filteredUsers = []; // Data untuk pencarian
   bool _isLoading = true;
+  final TextEditingController _searchCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -24,15 +26,38 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
   Future<void> fetchUsers() async {
     setState(() => _isLoading = true);
     final data = await UserService().getAllUsers();
-    final filtered = data.where((u) => u.role?.toLowerCase() != 'admin').toList();
+    
+    // 1. Filter hanya karyawan (bukan admin)
+    List<User> filtered = data.where((u) => u.role?.toLowerCase() != 'admin').toList();
+
+    // 2. Urutkan berdasarkan Abjad (A-Z) secara default
+    filtered.sort((a, b) => (a.name ?? "").toLowerCase().compareTo((b.name ?? "").toLowerCase()));
 
     setState(() {
-      _users = filtered;
+      _allUsers = filtered;
+      _filteredUsers = filtered;
       _isLoading = false;
     });
   }
 
-  // --- REVISI: DIALOG SUKSES RATA TENGAH ---
+  // 3. Fungsi Pencarian
+  void _runFilter(String keyword) {
+    List<User> results = [];
+    if (keyword.isEmpty) {
+      results = _allUsers;
+    } else {
+      results = _allUsers
+          .where((user) =>
+              (user.name ?? "").toLowerCase().contains(keyword.toLowerCase()))
+          .toList();
+    }
+
+    setState(() {
+      _filteredUsers = results;
+    });
+  }
+
+  // --- DIALOG SUKSES RATA TENGAH ---
   void _showResultDialog(String title, String message, bool isSuccess) {
     showDialog(
       context: context,
@@ -51,7 +76,7 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(title, 
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+              style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 10),
             Text(message, 
               textAlign: TextAlign.center, 
@@ -71,7 +96,8 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     );
   }
 
-  // --- REVISI: TAMPILAN TOMBOL KONFIRMASI RESET ---
+  // --- TAMPILAN TOMBOL KONFIRMASI RESET ---
+ // --- TAMPILAN TOMBOL KONFIRMASI RESET DENGAN IKON ---
   void _konfirmasiResetPassword(User user) {
     showDialog(
       context: context,
@@ -79,13 +105,13 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
         backgroundColor: const Color(0xFF192524),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          // Fixed: Remove isSuccess usage, use a neutral border color
           side: const BorderSide(color: Colors.orangeAccent, width: 2),
         ),
-        
+        // Menambahkan Ikon Warning
+        icon: const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 50),
         title: const Text("Reset Password?", 
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
+          style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 18)),
         content: Text(
           "Password ${user.name} akan direset menjadi 'nagahytam123'. Lanjutkan?",
           textAlign: TextAlign.center,
@@ -95,20 +121,12 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(180, 0, 255, 145),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+              TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("BATAL", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+                child: const Text("Batal", style: TextStyle(color: Colors.white54)),
               ),
               const SizedBox(width: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orangeAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+              TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
                   if (user.id != null) {
@@ -120,7 +138,8 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                     }
                   }
                 },
-                child: const Text("RESET", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+                child: const Text("Ya, Reset", 
+                  style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -129,20 +148,22 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     );
   }
 
-  // --- REVISI: TAMPILAN TOMBOL KONFIRMASI HAPUS ---
+  // --- TAMPILAN TOMBOL KONFIRMASI HAPUS DENGAN IKON ---
   void _konfirmasiHapus(User user) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
+        
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          // Fixed: Remove isSuccess usage, use a neutral border color
           side: const BorderSide(color: Colors.redAccent, width: 2),
         ),
+        // Menambahkan Ikon Delete
+        icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 50),
         title: const Text('Konfirmasi Hapus', 
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 18)),
         content: Text('Yakin ingin menghapus karyawan ${user.name}?', 
           textAlign: TextAlign.center,
           style: const TextStyle(color: Colors.white70)),
@@ -150,20 +171,12 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(180, 0, 255, 145),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+              TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("BATAL", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+                child: const Text("Batal", style: TextStyle(color: Colors.white54)),
               ),
               const SizedBox(width: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+              TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
                   if (user.id != null) {
@@ -172,7 +185,8 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                     fetchUsers();
                   }
                 },
-                child: const Text('HAPUS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Hapus', 
+                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -181,13 +195,15 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     );
   }
 
-  // --- FUNGSI POP-UP DETAIL (Tetap Konsisten) ---
+  // --- FUNGSI POP-UP DETAIL ---
   void tampilkanDetail(User user) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25),
+        side: const BorderSide(color: Color(0xFFD1EBDB), width: 1),),
+        
         title: Column(
           children: [
             CircleAvatar(
@@ -280,24 +296,55 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
           ),
         ),
         child: SafeArea(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
-              : RefreshIndicator(
-                  onRefresh: fetchUsers,
-                  color: const Color(0xFFD1EBDB),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _users.length,
-                    itemBuilder: (context, index) {
-                      final user = _users[index];
-                      return InkWell(
-                        onTap: () => tampilkanDetail(user),
-                        borderRadius: BorderRadius.circular(20),
-                        child: _buildEmployeeCard(user),
-                      );
-                    },
+          child: Column(
+            children: [
+              // --- SEARCH BAR ---
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: TextField(
+                  controller: _searchCtrl,
+                  onChanged: (value) => _runFilter(value),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: "Cari nama karyawan...",
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    prefixIcon: const Icon(Icons.search, color: Color(0xFFD1EBDB)),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
+              ),
+              
+              // --- LIST CONTENT ---
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
+                    : RefreshIndicator(
+                        onRefresh: fetchUsers,
+                        color: const Color(0xFFD1EBDB),
+                        child: _filteredUsers.isEmpty 
+                        ? const Center(child: Text("Karyawan tidak ditemukan", style: TextStyle(color: Colors.white54)))
+                        : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          itemCount: _filteredUsers.length,
+                          itemBuilder: (context, index) {
+                            final user = _filteredUsers[index];
+                            return InkWell(
+                              onTap: () => tampilkanDetail(user),
+                              borderRadius: BorderRadius.circular(20),
+                              child: _buildEmployeeCard(user),
+                            );
+                          },
+                        ),
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -338,11 +385,11 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                 ),
                 _buildActionButton(Icons.lock_reset, Colors.orangeAccent, () => _konfirmasiResetPassword(user)),
                 const SizedBox(width: 8),
-                _buildActionButton(Icons.edit, Colors.amber, () {
+                _buildActionButton(Icons.edit_note, Colors.amber, () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => EditKaryawanPage(user: user))).then((_) => fetchUsers());
                 }),
                 const SizedBox(width: 8),
-                _buildActionButton(Icons.delete, Colors.redAccent, () => _konfirmasiHapus(user)),
+                _buildActionButton(Icons.delete_outline, Colors.redAccent, () => _konfirmasiHapus(user)),
               ],
             ),
           ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:projek/ui/slip_gaji_detail_page.dart';
 import '../ui/beranda.dart';
-import '../ui/login.dart'; // Pastikan nama file sesuai (LoginPage)
+import '../ui/login.dart'; 
 import '../ui/cuti_page.dart';
 import '../helpers/user_info.dart';
 import '../ui/slip_gaji_page.dart';
@@ -11,7 +11,7 @@ import '../ui/changepasswordpage.dart';
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
 
-  // --- FUNGSI DIALOG KONFIRMASI KELUAR RATA TENGAH ---
+  // --- FUNGSI DIALOG KONFIRMASI KELUAR SIMPEL ---
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -20,54 +20,50 @@ class Sidebar extends StatelessWidget {
         backgroundColor: const Color(0xFF192524),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Colors.orangeAccent, width: 2), // Border Oranye
+          side: const BorderSide(color: Colors.orangeAccent, width: 1.5), 
         ),
-        title: const Center(
-          child: Icon(Icons.logout_rounded, color: Colors.orangeAccent, size: 50),
+        // Ikon Keluar Putih
+        icon: const Icon(Icons.logout_rounded, color: Colors.orangeAccent, size: 50),
+        title: const Text(
+          "Konfirmasi Keluar",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Konfirmasi Keluar",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "Apakah Anda yakin ingin keluar dari akun ini?",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70),
-            ),
-          ],
+        content: const Text(
+          "Apakah Anda yakin ingin keluar dari akun ini?",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70),
         ),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Tombol Batal Simpel (Tanpa Background)
               TextButton(
-                onPressed: () => Navigator.pop(ctx), // Tutup dialog
-                child: const Text("BATAL", style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(width: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  "Batal", 
+                  style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)
                 ),
+              ),
+              const SizedBox(width: 30),
+              // Tombol Keluar Simpel (Tanpa Background)
+              TextButton(
                 onPressed: () {
-                  // Logout dan hapus semua history halaman agar kembali ke Login
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginPage()),
                     (route) => false,
                   );
                 },
-                child: const Text("KELUAR", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  "Keluar", 
+                  style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 10), // Memberi sedikit ruang di bawah tombol
+          const SizedBox(height: 10),
         ],
       ),
     );
@@ -88,7 +84,6 @@ class Sidebar extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Header Sidebar
             UserAccountsDrawerHeader(
               margin: EdgeInsets.zero,
               decoration: const BoxDecoration(color: Colors.transparent),
@@ -108,11 +103,10 @@ class Sidebar extends StatelessWidget {
               ),
             ),
 
-            // Konten Navigasi
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEFECE9), // Latar belakang menu (Putih tulang)
+                  color: Color(0xFFEFECE9), 
                 ),
                 child: Column(
                   children: [
@@ -133,31 +127,26 @@ class Sidebar extends StatelessWidget {
                             destination: const CutiPage(),
                           ),
                           _buildListTile(
-  context,
-  icon: Icons.money,
-  title: "Slip Gaji",
-  onTap: () {
-    Navigator.pop(context); // Tutup Sidebar dulu
-    
-    // Cek Peran User
-    if (UserInfo.role?.toLowerCase() == 'admin') {
-      // Jika Admin -> Buka halaman daftar semua karyawan
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const SlipGajiPage()),
-      );
-    } else {
-      // Jika Karyawan -> Buka halaman riwayat gaji miliknya sendiri
-      // Kita kirim UserInfo.loginUser sebagai parameter 'user'
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SlipGajiDetailPage(user: UserInfo.loginUser!),
-        ),
-      );
-    }
-  },
-),
+                            context,
+                            icon: Icons.money,
+                            title: "Slip Gaji",
+                            onTap: () {
+                              Navigator.pop(context);
+                              if (UserInfo.role?.toLowerCase() == 'admin') {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const SlipGajiPage()),
+                                );
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SlipGajiDetailPage(user: UserInfo.loginUser!),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                           _buildListTile(
                             context,
                             icon: Icons.calendar_month,
@@ -170,7 +159,6 @@ class Sidebar extends StatelessWidget {
                             title: "Ganti Password",
                             destination: const ChangePasswordPage(),
                           ),
-                          // --- MENU KELUAR ---
                           _buildListTile(
                             context,
                             icon: Icons.logout_rounded,
@@ -181,7 +169,6 @@ class Sidebar extends StatelessWidget {
                       ),
                     ),
 
-                    // Footer Hak Cipta
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
@@ -205,7 +192,6 @@ class Sidebar extends StatelessWidget {
     );
   }
 
-  // Widget Pembuat ListTile Custom
   Widget _buildListTile(
     BuildContext context, {
     required IconData icon,
@@ -221,7 +207,7 @@ class Sidebar extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           onTap: onTap ?? () {
             if (destination != null) {
-              Navigator.pop(context); // Tutup Sidebar
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => destination),
@@ -231,7 +217,7 @@ class Sidebar extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFD1EBDB), // Background menu hijau pucat
+              color: const Color(0xFFD1EBDB),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(

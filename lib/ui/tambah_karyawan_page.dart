@@ -61,44 +61,66 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
   }
 
   // --- REVISI: DIALOG KONFIRMASI RATA TENGAH ---
-  void _showResultDialog(String title, String message, bool isSuccess) {
+ void _showResultDialog(String title, String message, {bool isSuccess = false}) {
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // User wajib klik OK, tidak bisa asal klik luar
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          // Fixed: Remove isSuccess usage, use a neutral border color
-          side: const BorderSide(color: Colors.greenAccent, width: 2),
-        ),
-        title: Center(
-          child: Icon(
-            isSuccess ? Icons.check_circle : Icons.error_outline,
-            color: isSuccess ? Colors.greenAccent : Colors.redAccent,
-            size: 50,
+          borderRadius: BorderRadius.circular(25),
+          side: BorderSide(
+            color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
+            width: 2,
           ),
         ),
-        content: Column(
+        title: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(title, 
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 10),
-            Text(message, 
-              textAlign: TextAlign.center, 
-              style: const TextStyle(color: Colors.white70)),
+            Center(
+              child: Icon(
+                isSuccess ? Icons.check_circle : Icons.error_outline, 
+                color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
+                size: 50,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title, 
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isSuccess ? Colors.greenAccent : Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
           ],
+        ),
+        content: Text(
+          message, 
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white70 ),
         ),
         actions: [
           Center(
             child: TextButton(
               onPressed: () {
-                Navigator.pop(ctx);
-                if (isSuccess) Navigator.pop(context);
+                // 1. Tutup Dialog-nya dulu
+                Navigator.pop(ctx); 
+                
+                // 2. Jika ini dialog sukses, barulah tutup halaman Form-nya
+                if (isSuccess) {
+                  Navigator.pop(context, true); 
+                }
               },
-              child: const Text("OK", 
-                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+              child: Text(
+                "OK", 
+                style: TextStyle(
+                  color: isSuccess ? const Color(0xFFD1EBDB) : Colors.redAccent, 
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 18,
+                ),
+              ),
             ),
           )
         ],
@@ -326,13 +348,13 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
               bool success = await UserService().tambahUser(user);
               setState(() => _isLoading = false);
               if (success) {
-                _showResultDialog("Berhasil", "Data Karyawan Baru Telah Disimpan", true);
+                _showResultDialog("Berhasil", "Data Karyawan Baru Telah Disimpan", isSuccess: true);
               } else {
-                _showResultDialog("Gagal", "Terjadi kesalahan saat menyimpan data", false);
+                _showResultDialog("Gagal", "Terjadi kesalahan saat menyimpan data", isSuccess: false);
               }
             } catch (e) {
               setState(() => _isLoading = false);
-              _showResultDialog("Error", e.toString(), false);
+              _showResultDialog("Error", e.toString(), isSuccess: false);
             }
           }
         },

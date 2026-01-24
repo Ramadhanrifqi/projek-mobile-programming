@@ -270,7 +270,7 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
     );
   }
 
-  void _showResultDialog(String title, String message, bool isSuccess) {
+void _showResultDialog(String title, String message, bool isSuccess) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -278,20 +278,56 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
         backgroundColor: const Color(0xFF192524),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(25),
-          side: BorderSide(color: isSuccess ? const Color(0xFFD1EBDB) : Colors.redAccent, width: 2),
+          side: BorderSide(
+            color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
+            width: 2,
+          ),
         ),
-        title: Center(
-          child: Icon(isSuccess ? Icons.check_circle : Icons.error, color: isSuccess ? const Color(0xFFD1EBDB) : Colors.redAccent, size: 50),
+        // --- REVISI BAGIAN TITLE: IKON + TEKS BESAR ---
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Icon(
+                isSuccess ? Icons.check_circle : Icons.error_outline, 
+                color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
+                size: 50,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              isSuccess ? "Berhasil" : "Gagal", 
+              style: TextStyle(
+                color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
+                fontWeight: FontWeight.bold, 
+                fontSize: 18, // Ukuran teks besar sesuai permintaan
+              ),
+            ),
+          ],
         ),
-        content: Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+        // --- BAGIAN KONTEN (PESAN) ---
+        content: Text(
+          message, 
+          textAlign: TextAlign.center, 
+          style: const TextStyle(color: Colors.white70, fontSize: 16),
+        ),
         actions: [
           Center(
             child: TextButton(
               onPressed: () {
-                Navigator.pop(ctx);
-                if (isSuccess) Navigator.pop(context, true);
+                Navigator.pop(ctx); // Tutup dialog
+                if (isSuccess) {
+                  Navigator.pop(context, true); // Kembali ke halaman sebelumnya jika sukses
+                }
               },
-              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+              child: Text(
+                "OK", 
+                style: TextStyle(
+                  color: isSuccess ? const Color(0xFFD1EBDB) : Colors.redAccent, 
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 18,
+                ),
+              ),
             ),
           )
         ],
