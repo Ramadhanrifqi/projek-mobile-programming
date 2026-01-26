@@ -17,11 +17,14 @@ class CutiPage extends StatefulWidget {
 }
 
 class _CutiPageState extends State<CutiPage> {
-  List<Cuti> _allCutiList = []; // Data asli dari server
-  List<Cuti> _filteredCutiList = []; // Data hasil filter pencarian
+  List<Cuti> _allCutiList = []; // Data mentah dari server
+  List<Cuti> _filteredCutiList = []; // Data setelah filter & sort
   List<User> _allUsers = [];
   bool _isLoading = true;
   final TextEditingController _searchCtrl = TextEditingController();
+  
+  // Status filter yang terpilih
+  String _selectedStatus = "All"; 
 
   @override
   void initState() {
@@ -37,22 +40,31 @@ class _CutiPageState extends State<CutiPage> {
 
       final isAdmin = UserInfo.role?.toLowerCase() == 'admin';
 
+      // Pisahkan data milik user sendiri atau semua data jika admin
       List<Cuti> rawList = isAdmin
           ? data
           : data.where((cuti) {
               return cuti.ajukanCuti?.toLowerCase().trim() ==
-                  UserInfo.username?.toLowerCase().trim();
+                  UserInfo.email?.toLowerCase().trim();
             }).toList();
 
+      // LOGIKA SORTING: Pending (1), Ditolak (2), Disetujui (3)
+      // Ini memastikan status disetujui tenggelam ke bawah.
       rawList.sort((a, b) {
-        int idA = int.tryParse(a.id.toString()) ?? 0;
-        int idB = int.tryParse(b.id.toString()) ?? 0;
-        return idB.compareTo(idA);
+        int priority(String? s) {
+          switch (s?.toLowerCase().trim()) {
+            case 'pending': return 1;
+            case 'ditolak': return 2;
+            case 'disetujui': return 3;
+            default: return 4;
+          }
+        }
+        return priority(a.status).compareTo(priority(b.status));
       });
 
       setState(() {
         _allCutiList = rawList;
-        _filteredCutiList = rawList; 
+        _applyFilter(); // Terapkan filter awal
         _isLoading = false;
       });
     } catch (e) {
@@ -61,16 +73,18 @@ class _CutiPageState extends State<CutiPage> {
     }
   }
 
-  void _runFilter(String keyword) {
-    List<Cuti> results = [];
-    if (keyword.isEmpty) {
-      results = _allCutiList;
-    } else {
-      results = _allCutiList.where((cuti) {
-        final nama = getNamaAsli(cuti.ajukanCuti ?? '').toLowerCase();
-        return nama.contains(keyword.toLowerCase());
-      }).toList();
-    }
+  // Fungsi Filter Terpadu (Nama + Tombol Status)
+  void _applyFilter() {
+    String keyword = _searchCtrl.text.toLowerCase();
+    List<Cuti> results = _allCutiList.where((cuti) {
+      final nama = getNamaAsli(cuti.ajukanCuti ?? '').toLowerCase();
+      
+      final statusMatch = (_selectedStatus == "All") || 
+                          (cuti.status?.toLowerCase().trim() == _selectedStatus.toLowerCase());
+      final nameMatch = nama.contains(keyword);
+      
+      return statusMatch && nameMatch;
+    }).toList();
 
     setState(() {
       _filteredCutiList = results;
@@ -86,7 +100,8 @@ class _CutiPageState extends State<CutiPage> {
     }
   }
 
-  // --- REVISI: DIALOG SUKSES DENGAN ICON + TEKS BERHASIL ---
+  // --- WIDGET DIALOGS ---
+
   void _showSuccessDialog(String message) {
     showDialog(
       context: context,
@@ -100,29 +115,17 @@ class _CutiPageState extends State<CutiPage> {
           children: [
             const Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
             const SizedBox(height: 10),
-            const Text(
-              "Berhasil",
-              style: TextStyle(
-                  color: Colors.greenAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18),
-            ),
+            const Text("Berhasil",
+                style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 15),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white),
-            ),
+            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
           ],
         ),
         actions: [
           Center(
             child: TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text("OK",
-                    style: TextStyle(
-                        color: Color(0xFFD1EBDB),
-                        fontWeight: FontWeight.bold))))
+                child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold))))
         ],
       ),
     );
@@ -149,23 +152,19 @@ class _CutiPageState extends State<CutiPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text("Batal", style: TextStyle(color: Colors.white54))),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal", style: TextStyle(color: Colors.white54))),
               const SizedBox(width: 20),
               TextButton(
                 onPressed: () async {
                   Navigator.pop(ctx);
                   setState(() => _isLoading = true);
-                  bool success = await CutiService().resetCutiSemua();
-                  if (success) {
+                  if (await CutiService().resetCutiSemua()) {
                     _showSuccessDialog("Jatah direset & riwayat dikosongkan!");
                     getData();
                   }
                   setState(() => _isLoading = false);
                 },
-                child: const Text("Ya, Reset",
-                    style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
+                child: const Text("Ya, Reset", style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -212,6 +211,29 @@ class _CutiPageState extends State<CutiPage> {
     );
   }
 
+  // Widget Tombol Filter di Header
+  Widget _buildFilterButton(String label) {
+    bool isSelected = _selectedStatus == label;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedStatus = label;
+          _applyFilter();
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? _getStatusColor(label).withOpacity(0.3) : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSelected ? _getStatusColor(label) : Colors.white24),
+        ),
+        child: Text(label, style: TextStyle(color: isSelected ? Colors.white : Colors.white70, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isAdmin = UserInfo.role?.toLowerCase() == 'admin';
@@ -220,48 +242,53 @@ class _CutiPageState extends State<CutiPage> {
       extendBodyBehindAppBar: true,
       drawer: const Sidebar(),
       appBar: AppBar(
-        title: const Text('Riwayat Cuti',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Riwayat Cuti', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
+        elevation: 0, centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
-        width: double.infinity,
-        height: double.infinity,
+        width: double.infinity, height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              if (isAdmin)
+              if (isAdmin) ...[
+                // Kolom Pencarian
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: TextField(
                     controller: _searchCtrl,
-                    onChanged: (value) => _runFilter(value),
+                    onChanged: (value) => _applyFilter(),
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: "Cari nama pengaju...",
                       hintStyle: const TextStyle(color: Colors.white54),
                       prefixIcon: const Icon(Icons.search, color: Color(0xFFD1EBDB)),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide.none,
-                      ),
+                      filled: true, fillColor: Colors.white.withOpacity(0.1),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
                     ),
                   ),
                 ),
-
+                // Barisan Tombol Filter
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      _buildFilterButton("All"),
+                      _buildFilterButton("Pending"),
+                      _buildFilterButton("Disetujui"),
+                      _buildFilterButton("Ditolak"),
+                    ],
+                  ),
+                ),
+              ],
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
@@ -290,8 +317,7 @@ class _CutiPageState extends State<CutiPage> {
               backgroundColor: Colors.orangeAccent,
               onPressed: () => _konfirmasiResetJatah(),
               icon: const Icon(Icons.refresh, color: Colors.black87),
-              label: const Text("Reset Jatah & Riwayat",
-                  style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+              label: const Text("Reset Jatah & Riwayat", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
             )
           : FloatingActionButton(
               backgroundColor: const Color(0xFFD1EBDB),
@@ -303,19 +329,20 @@ class _CutiPageState extends State<CutiPage> {
 
   Widget _buildCutiCard(Cuti cuti, bool isAdmin, String namaTampil) {
     final status = cuti.status?.toLowerCase().trim() ?? 'pending';
-
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        // Visual: Jika disetujui, card dibuat lebih pudar
+        color: status == 'disetujui' ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: status == 'disetujui' ? Colors.transparent : Colors.white.withOpacity(0.2)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        leading: const CircleAvatar(
-            backgroundColor: Color(0xFFD1EBDB),
-            child: Icon(Icons.calendar_today, color: Colors.black87)),
+        leading: CircleAvatar(
+            backgroundColor: _getStatusColor(cuti.status).withOpacity(0.2),
+            child: Icon(Icons.calendar_today, color: _getStatusColor(cuti.status))),
         title: Text(namaTampil, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,8 +371,11 @@ class _CutiPageState extends State<CutiPage> {
   }
 
   Color _getStatusColor(String? status) {
-    if (status?.toLowerCase() == 'disetujui') return Colors.greenAccent;
-    if (status?.toLowerCase() == 'ditolak') return Colors.redAccent;
-    return Colors.orangeAccent;
+    switch (status?.toLowerCase().trim()) {
+      case 'disetujui': return Colors.greenAccent;
+      case 'ditolak': return Colors.redAccent;
+      case 'pending': return Colors.orangeAccent;
+      default: return Colors.white;
+    }
   }
 }

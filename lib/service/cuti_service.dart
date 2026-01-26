@@ -35,7 +35,6 @@ class CutiService {
       } else {
         msg = e.message ?? "Koneksi ke server terputus";
       }
-
       return {'success': false, 'message': msg};
     }catch (e) {
   // Ini akan menampilkan pesan error asli di layar HP Anda

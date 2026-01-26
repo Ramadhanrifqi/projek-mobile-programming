@@ -11,7 +11,6 @@ class LoginService {
         'email': email,
         'password': password,
       });
-
       if (response.statusCode == 200) {
         // Mengembalikan Map yang berisi data user dan token dari Laravel
         return {
