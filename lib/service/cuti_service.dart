@@ -37,10 +37,10 @@ class CutiService {
       }
 
       return {'success': false, 'message': msg};
-    } catch (e) {
-      // Menghilangkan e.toString() agar tidak muncul teks teknis panjang
-      return {'success': false, 'message': "Kesalahan Sistem: Hubungi Admin"};
-    }
+    }catch (e) {
+  // Ini akan menampilkan pesan error asli di layar HP Anda
+  return {'success': false, 'message': "DETAIL ERROR: ${e.toString()}"};
+}
   }
 
   Future ubah(Cuti cuti, String id) async {
