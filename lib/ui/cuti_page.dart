@@ -12,10 +12,9 @@ import 'cuti_update_form.dart';
 class CutiPage extends StatefulWidget {
   const CutiPage({super.key});
 
-  @override
-  State<CutiPage> createState() => _CutiPageState();
+ @override
+  State<CutiPage> createState() => _CutiPageState(); // Pastikan satu underscore
 }
-
 class _CutiPageState extends State<CutiPage> {
   List<Cuti> _allCutiList = []; // Data mentah dari server
   List<Cuti> _filteredCutiList = []; // Data setelah filter & sort
@@ -40,7 +39,7 @@ class _CutiPageState extends State<CutiPage> {
 
       final isAdmin = UserInfo.role?.toLowerCase() == 'admin';
 
-      // Pisahkan data milik user sendiri atau semua data jika admin
+      // Admin melihat semua data, User melihat data sendiri
       List<Cuti> rawList = isAdmin
           ? data
           : data.where((cuti) {
@@ -49,7 +48,6 @@ class _CutiPageState extends State<CutiPage> {
             }).toList();
 
       // LOGIKA SORTING: Pending (1), Ditolak (2), Disetujui (3)
-      // Ini memastikan status disetujui tenggelam ke bawah.
       rawList.sort((a, b) {
         int priority(String? s) {
           switch (s?.toLowerCase().trim()) {
@@ -64,7 +62,7 @@ class _CutiPageState extends State<CutiPage> {
 
       setState(() {
         _allCutiList = rawList;
-        _applyFilter(); // Terapkan filter awal
+        _applyFilter(); 
         _isLoading = false;
       });
     } catch (e) {
@@ -73,17 +71,29 @@ class _CutiPageState extends State<CutiPage> {
     }
   }
 
-  // Fungsi Filter Terpadu (Nama + Tombol Status)
+  // Fungsi Filter Terpadu (Nama + Tombol Status + My Leave)
   void _applyFilter() {
     String keyword = _searchCtrl.text.toLowerCase();
+    String myEmail = UserInfo.email?.toLowerCase().trim() ?? "";
+
     List<Cuti> results = _allCutiList.where((cuti) {
-      final nama = getNamaAsli(cuti.ajukanCuti ?? '').toLowerCase();
-      
-      final statusMatch = (_selectedStatus == "All") || 
-                          (cuti.status?.toLowerCase().trim() == _selectedStatus.toLowerCase());
+      final emailPengaju = cuti.ajukanCuti?.toLowerCase().trim() ?? "";
+      final nama = getNamaAsli(emailPengaju).toLowerCase();
+      final statusCuti = cuti.status?.toLowerCase().trim() ?? "";
+
+      // LOGIKA FILTER STATUS & MY LEAVE
+      bool matchStatus = false;
+      if (_selectedStatus == "All") {
+        matchStatus = true;
+      } else if (_selectedStatus == "Cuti Saya") {
+        matchStatus = (emailPengaju == myEmail);
+      } else {
+        matchStatus = (statusCuti == _selectedStatus.toLowerCase());
+      }
+
       final nameMatch = nama.contains(keyword);
       
-      return statusMatch && nameMatch;
+      return matchStatus && nameMatch;
     }).toList();
 
     setState(() {
@@ -210,10 +220,11 @@ class _CutiPageState extends State<CutiPage> {
       ),
     );
   }
-
-  // Widget Tombol Filter di Header
   Widget _buildFilterButton(String label) {
     bool isSelected = _selectedStatus == label;
+    // Warna biru khusus untuk filter "Cuti Saya"
+    Color activeColor = (label == "Cuti Saya") ? Colors.blueAccent : _getStatusColor(label);
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -225,9 +236,9 @@ class _CutiPageState extends State<CutiPage> {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? _getStatusColor(label).withOpacity(0.3) : Colors.white.withOpacity(0.05),
+          color: isSelected ? activeColor.withOpacity(0.3) : Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? _getStatusColor(label) : Colors.white24),
+          border: Border.all(color: isSelected ? activeColor : Colors.white24),
         ),
         child: Text(label, style: TextStyle(color: isSelected ? Colors.white : Colors.white70, fontWeight: FontWeight.bold)),
       ),
@@ -259,7 +270,6 @@ class _CutiPageState extends State<CutiPage> {
           child: Column(
             children: [
               if (isAdmin) ...[
-                // Kolom Pencarian
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: TextField(
@@ -275,13 +285,13 @@ class _CutiPageState extends State<CutiPage> {
                     ),
                   ),
                 ),
-                // Barisan Tombol Filter
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
                       _buildFilterButton("All"),
+                      _buildFilterButton("Cuti Saya"), // Tombol filter baru
                       _buildFilterButton("Pending"),
                       _buildFilterButton("Disetujui"),
                       _buildFilterButton("Ditolak"),
@@ -312,63 +322,175 @@ class _CutiPageState extends State<CutiPage> {
           ),
         ),
       ),
-      floatingActionButton: isAdmin
-          ? FloatingActionButton.extended(
-              backgroundColor: Colors.orangeAccent,
-              onPressed: () => _konfirmasiResetJatah(),
-              icon: const Icon(Icons.refresh, color: Colors.black87),
-              label: const Text("Reset Jatah & Riwayat", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-            )
-          : FloatingActionButton(
-              backgroundColor: const Color(0xFFD1EBDB),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CutiForm())).then((_) => getData()),
-              child: const Icon(Icons.add, color: Color(0xFF192524)),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (isAdmin)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: FloatingActionButton.extended(
+                heroTag: "resetBtn",
+                backgroundColor: Colors.orangeAccent,
+                onPressed: () => _konfirmasiResetJatah(),
+                icon: const Icon(Icons.refresh, color: Colors.black87),
+                label: const Text("Reset Jatah", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+              ),
             ),
+          FloatingActionButton(
+            heroTag: "addBtn",
+            backgroundColor: const Color(0xFFD1EBDB),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CutiForm())).then((_) => getData()),
+            child: const Icon(Icons.add, color: Color(0xFF192524)),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildCutiCard(Cuti cuti, bool isAdmin, String namaTampil) {
-    final status = cuti.status?.toLowerCase().trim() ?? 'pending';
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        // Visual: Jika disetujui, card dibuat lebih pudar
-        color: status == 'disetujui' ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: status == 'disetujui' ? Colors.transparent : Colors.white.withOpacity(0.2)),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(
-            backgroundColor: _getStatusColor(cuti.status).withOpacity(0.2),
-            child: Icon(Icons.calendar_today, color: _getStatusColor(cuti.status))),
-        title: Text(namaTampil, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  final status = cuti.status?.toLowerCase().trim() ?? 'pending';
+  bool isMyOwnCuti =
+      cuti.ajukanCuti?.toLowerCase().trim() ==
+      UserInfo.email?.toLowerCase().trim();
+
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.white.withOpacity(0.1)),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        /// ================= LEFT CONTENT =================
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                namaTampil,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "${cuti.tanggalMulai} s/d ${cuti.tanggalSelesai}",
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                "Alasan: ${cuti.alasan ?? '-'}",
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontStyle: FontStyle.italic,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Status: ${cuti.status}",
+                style: TextStyle(
+                  color: _getStatusColor(cuti.status),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(width: 12),
+
+        /// ================= RIGHT CONTENT =================
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text("${cuti.tanggalMulai} - ${cuti.tanggalSelesai}", style: const TextStyle(color: Colors.white70)),
-            Text("Alasan: ${cuti.alasan ?? '-'}", style: const TextStyle(color: Colors.white60, fontStyle: FontStyle.italic)),
-            const SizedBox(height: 4),
-            Text("Status: ${cuti.status}", style: TextStyle(color: _getStatusColor(cuti.status), fontWeight: FontWeight.bold)),
+            if (isMyOwnCuti)
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.blueAccent.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border:
+                      Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+                ),
+                child: const Text(
+                  "Pengajuan Cuti Saya",
+                  style: TextStyle(
+                    color: Colors.blueAccent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isMyOwnCuti &&
+                    (status == 'pending' || status == 'ditolak'))
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(
+                      Icons.delete_rounded,
+                      color: Colors.redAccent,
+                      size: 22,
+                    ),
+                    onPressed: () => _konfirmasiHapus(cuti),
+                  ),
+
+                if (isAdmin && status == 'pending' && !isMyOwnCuti)
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(
+                      Icons.edit_note_rounded,
+                      color: Colors.white70,
+                      size: 24,
+                    ),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CutiUpdateFormPage(
+                          cuti: cuti,
+                          namaPengaju: namaTampil,
+                        ),
+                      ),
+                    ).then((_) => getData()),
+                  ),
+              ],
+            ),
+
+            if (isAdmin && status == 'pending' && isMyOwnCuti)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: SizedBox(
+                  width: 180,
+                  child: Text(
+                    "Tunggu Persetujuan Admin Lain",
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      color: Colors.orangeAccent,
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
-        trailing: isAdmin
-            ? (status == 'pending'
-                ? IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.white70),
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => CutiUpdateFormPage(cuti: cuti, namaPengaju: namaTampil))).then((_) => getData());
-                    })
-                : null)
-            : (status == 'pending' || status == 'ditolak'
-                ? IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    onPressed: () => _konfirmasiHapus(cuti))
-                : null),
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
+
 
   Color _getStatusColor(String? status) {
     switch (status?.toLowerCase().trim()) {

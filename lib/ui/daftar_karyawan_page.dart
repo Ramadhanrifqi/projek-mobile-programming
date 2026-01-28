@@ -30,10 +30,10 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     setState(() => _isLoading = true);
     final data = await UserService().getAllUsers();
     
-    // 1. Filter hanya karyawan (bukan admin)
-    List<User> filtered = data.where((u) => u.role?.toLowerCase() != 'admin').toList();
+    // PERBAIKAN: Hapus filter role agar Admin tetap muncul
+    List<User> filtered = data; 
 
-    // 2. Urutkan berdasarkan Abjad (A-Z)
+    // Urutkan berdasarkan Abjad (A-Z)
     filtered.sort((a, b) => (a.name ?? "").toLowerCase().compareTo((b.name ?? "").toLowerCase()));
 
     setState(() {
@@ -384,26 +384,47 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(child: Text(user.name ?? "Tanpa Nama", overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold))),
-                          const SizedBox(width: 8),
-                          // LABEL LEVEL DENGAN WARNA BERBEDA
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: lvlColor.withOpacity(0.15), 
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: lvlColor.withOpacity(0.5), width: 0.5),
-                            ),
-                            child: Text(
-                              user.level?.toUpperCase() ?? "-", 
-                              style: TextStyle(color: lvlColor, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                            ),
-                          ),
-                        ],
-                      ),
+                      // Di dalam _buildEmployeeCard bagian Row nama:
+Row(
+  children: [
+    Flexible(
+      child: Text(
+        user.name ?? "Tanpa Nama", 
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)
+      )
+    ),
+    const SizedBox(width: 8),
+    // TAMBAHKAN LABEL ADMIN JIKA ROLE ADALAH ADMIN
+    if (user.role?.toLowerCase() == 'admin')
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+        ),
+        child: const Text(
+          "ADMIN",
+          style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.bold),
+        ),
+      ),
+    const SizedBox(width: 8),
+    // Label Level (tetap ada)
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: lvlColor.withOpacity(0.15), 
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: lvlColor.withOpacity(0.5), width: 0.5),
+      ),
+      child: Text(
+        user.level?.toUpperCase() ?? "-", 
+        style: TextStyle(color: lvlColor, fontSize: 9, fontWeight: FontWeight.bold),
+      ),
+    ),
+  ],
+),
                       Text(user.department ?? "Belum Diatur", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
                     ],
                   ),

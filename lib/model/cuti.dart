@@ -42,6 +42,6 @@ class Cuti {
     "tanggalMulai": tanggalMulai,
     "tanggalSelesai": tanggalSelesai,
     "alasan": alasan,
-    "Status": status, 
+    "status": status, 
   };
 }

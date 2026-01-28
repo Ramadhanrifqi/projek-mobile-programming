@@ -165,7 +165,7 @@ class _EditKaryawanPageState extends State<EditKaryawanPage> {
                         _buildSectionTitle(Icons.work_outline, "Pekerjaan"),
                         _buildModernField(_jobDescCtrl, "Deskripsi Pekerjaan", Icons.assignment_outlined, maxLines: 2),
                         _buildModernDropdown("Departemen", Icons.account_tree_outlined, _selectedDepartment, 
-                            ["Operator", "Gudang", "HR", "Produksi"], (v) => setState(() => _selectedDepartment = v)),
+                            ["Operator", "Gudang","Produksi"], (v) => setState(() => _selectedDepartment = v)),
                         _buildModernDropdown("Level", Icons.trending_up, _selectedLevel, 
                             ["Junior", "Senior", "Lead"], (v) => setState(() => _selectedLevel = v)),
                         

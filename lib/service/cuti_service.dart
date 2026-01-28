@@ -42,15 +42,23 @@ class CutiService {
 }
   }
 
-  Future ubah(Cuti cuti, String id) async {
-    try {
-      final response = await _apiClient.put('cuti/$id', cuti.toJson());
-      return response;
-    } catch (e) {
-      debugPrint("Error ubah Cuti: $e");
-      throw Exception("Gagal update data cuti");
+Future<Map<String, dynamic>> ubah(Cuti cuti, String id) async {
+  try {
+    // Pastikan ID dikonversi ke String dan data dalam bentuk JSON
+    final response = await _apiClient.put('cuti/${id.toString()}', cuti.toJson());
+    
+    // Pastikan status code dari server adalah 200/201
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return {'success': true, 'message': 'Status berhasil diperbarui'};
     }
+    return {'success': false, 'message': 'Gagal memperbarui: Status ${response.statusCode}'};
+  } on DioException catch (e) {
+    // Ini akan menangkap pesan "Admin dilarang approve sendiri"
+    return {'success': false, 'message': _parseError(e)};
+  } catch (e) {
+    return {'success': false, 'message': "Kesalahan Sistem: ${e.toString()}"};
   }
+}
 
   Future hapus(String id) async {
     try {
@@ -73,5 +81,13 @@ class CutiService {
       debugPrint("Error Reset Cuti: $e");
       return false;
     }
+  }
+
+  String _parseError(DioException e) {
+    if (e.response != null && e.response!.data is Map) {
+      // Mengambil ['message'] yang kita kirim dari Controller Laravel
+      return e.response!.data['message'] ?? "Gagal memproses data server";
+    }
+    return e.message ?? "Koneksi ke server terputus";
   }
 }

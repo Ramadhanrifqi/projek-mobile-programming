@@ -34,7 +34,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     _statusCtrl.text = widget.cuti.status ?? 'Pending';
   }
 
-  // --- REVISI: DIALOG SUKSES DENGAN TEKS "BERHASIL" ---
+  // --- DIALOG SUKSES ---
   void _showSuccessDialog(String message) {
     showDialog(
       context: context,
@@ -45,37 +45,22 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Colors.greenAccent, width: 2),
         ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
+        title: const Column(
           children: [
-            const Center(
-              child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Berhasil",
-              style: TextStyle(
-                color: Colors.greenAccent, 
-                fontWeight: FontWeight.bold, 
-                fontSize: 18, // Ukuran teks Berhasil
-              ),
-            ),
+            Icon(Icons.check_circle, color: Colors.greenAccent, size: 50),
+            SizedBox(height: 10),
+            Text("Berhasil", style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
           ],
         ),
-        content: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white),
-        ),
+        content: Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
         actions: [
           Center(
             child: TextButton(
               onPressed: () {
-                Navigator.pop(ctx);
-                Navigator.pop(context, true);
+                Navigator.pop(ctx); // Tutup Dialog
+                Navigator.pop(context, true); // Kembali ke list dan refresh data
               },
-              child: const Text("OK", 
-                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold, fontSize: 18)),
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
             ),
           )
         ],
@@ -83,7 +68,7 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
     );
   }
 
-  // --- REVISI: DIALOG ERROR DENGAN TEKS "GAGAL" ---
+  // --- DIALOG ERROR ---
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -93,34 +78,19 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Colors.redAccent, width: 2),
         ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
+        title: const Column(
           children: [
-            const Center(
-              child: Icon(Icons.error_outline, color: Colors.redAccent, size: 50),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Gagal",
-              style: TextStyle(
-                color: Colors.redAccent, 
-                fontWeight: FontWeight.bold, 
-                fontSize: 18, // Ukuran teks Gagal
-              ),
-            ),
+            Icon(Icons.error_outline, color: Colors.redAccent, size: 50),
+            SizedBox(height: 10),
+            Text("Gagal", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
           ],
         ),
-        content: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white70),
-        ),
+        content: Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
         actions: [
           Center(
             child: TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text("OK", 
-                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold, fontSize: 18)),
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
             ),
           )
         ],
@@ -247,27 +217,34 @@ class _CutiUpdateFormPageState extends State<CutiUpdateFormPage> {
           backgroundColor: const Color(0xFFD1EBDB),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         ),
-        onPressed: () async {
-          setState(() => _isLoading = true);
-          try {
-            Cuti cutiBaru = Cuti(
-              id: widget.cuti.id,
-              ajukanCuti: widget.cuti.ajukanCuti,
-              tanggalMulai: _tanggalMulaiCtrl.text,
-              tanggalSelesai: _tanggalSelesaiCtrl.text,
-              alasan: _alasanCtrl.text,
-              status: _statusCtrl.text,
-            );
+       onPressed: () async {
+  setState(() => _isLoading = true);
+  try {
+    Cuti cutiBaru = Cuti(
+      id: widget.cuti.id,
+      ajukanCuti: widget.cuti.ajukanCuti,
+      tanggalMulai: _tanggalMulaiCtrl.text,
+      tanggalSelesai: _tanggalSelesaiCtrl.text,
+      alasan: _alasanCtrl.text,
+      status: _statusCtrl.text, 
+    );
 
-            await CutiService().ubah(cutiBaru, widget.cuti.id!).then((value) {
-              _showSuccessDialog("Status pengajuan berhasil diperbarui.");
-            });
-          } catch (e) {
-            _showErrorDialog("Gagal memperbarui data: $e");
-          } finally {
-            setState(() => _isLoading = false);
-          }
-        },
+    // Kirim data ke service
+    final result = await CutiService().ubah(cutiBaru, widget.cuti.id.toString());
+
+    // Cek apakah response sukses (berdasarkan Map yang dikembalikan service)
+    if (result['success'] == true) {
+      _showSuccessDialog("Status pengajuan berhasil diperbarui.");
+    } else {
+      // Menampilkan pesan asli dari Laravel (misal: "Admin dilarang approve sendiri")
+      _showErrorDialog(result['message'] ?? "Gagal memperbarui status.");
+    }
+  } catch (e) {
+    _showErrorDialog("Koneksi Error: ${e.toString()}");
+  } finally {
+    setState(() => _isLoading = false);
+  }
+},
         child: const Text("SIMPAN PERUBAHAN", 
           style: TextStyle(color: Color(0xFF192524), fontWeight: FontWeight.bold)),
       ),

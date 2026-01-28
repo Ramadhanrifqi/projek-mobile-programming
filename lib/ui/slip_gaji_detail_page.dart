@@ -245,7 +245,7 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Riwayat: ${widget.user.name}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text("Riwayat Gaji ${widget.user.name}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent, elevation: 0, iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(

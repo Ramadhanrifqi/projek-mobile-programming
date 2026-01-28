@@ -183,7 +183,7 @@ class _TambahKaryawanPageState extends State<TambahKaryawanPage> {
                           label: "Departemen",
                           icon: Icons.account_tree_outlined,
                           value: _selectedDepartment,
-                          items: ["Operator", "Gudang", "HR", "Produksi"],
+                          items: ["Operator", "Gudang","Produksi"],
                           onChanged: (v) => setState(() => _selectedDepartment = v),
                         ),
                         _buildModernDropdown(
