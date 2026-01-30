@@ -7,11 +7,37 @@ import '../helpers/user_info.dart';
 import '../ui/slip_gaji_page.dart';
 import '../ui/data_shift_page.dart';
 import '../ui/changepasswordpage.dart';
+import '../service/cuti_service.dart'; // Import service cuti
 
-class Sidebar extends StatelessWidget {
+class Sidebar extends StatefulWidget { // Diubah ke StatefulWidget
   const Sidebar({super.key});
 
-  // --- FUNGSI DIALOG KONFIRMASI KELUAR SIMPEL ---
+  @override
+  State<Sidebar> createState() => _SidebarState();
+}
+
+class _SidebarState extends State<Sidebar> {
+  int _pendingCount = 0; // Variabel untuk menyimpan jumlah pending
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPendingCuti();
+  }
+
+  // Fungsi untuk mengambil angka pending dari server
+  void _loadPendingCuti() async {
+    // Hanya Admin yang perlu memuat angka notifikasi
+    if (UserInfo.role?.toLowerCase() == 'admin') {
+      int count = await CutiService().getPendingCount();
+      if (mounted) {
+        setState(() {
+          _pendingCount = count;
+        });
+      }
+    }
+  }
+
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -22,7 +48,6 @@ class Sidebar extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Colors.orangeAccent, width: 1.5), 
         ),
-        // Ikon Keluar Putih
         icon: const Icon(Icons.logout_rounded, color: Colors.orangeAccent, size: 50),
         title: const Text(
           "Konfirmasi Keluar",
@@ -38,16 +63,11 @@ class Sidebar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Tombol Batal Simpel (Tanpa Background)
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text(
-                  "Batal", 
-                  style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)
-                ),
+                child: const Text("Batal", style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 30),
-              // Tombol Keluar Simpel (Tanpa Background)
               TextButton(
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
@@ -56,10 +76,7 @@ class Sidebar extends StatelessWidget {
                     (route) => false,
                   );
                 },
-                child: const Text(
-                  "Keluar", 
-                  style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)
-                ),
+                child: const Text("Keluar", style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -120,12 +137,16 @@ class Sidebar extends StatelessWidget {
                             title: "Beranda",
                             destination: const Beranda(),
                           ),
+                          
+                          // --- MENU PENGAJUAN CUTI DENGAN BADGE ---
                           _buildListTile(
                             context,
                             icon: Icons.calendar_today,
                             title: "Pengajuan Cuti",
                             destination: const CutiPage(),
+                            badgeCount: _pendingCount, // Kirim jumlah pending ke tile
                           ),
+
                           _buildListTile(
                             context,
                             icon: Icons.money,
@@ -133,17 +154,9 @@ class Sidebar extends StatelessWidget {
                             onTap: () {
                               Navigator.pop(context);
                               if (UserInfo.role?.toLowerCase() == 'admin') {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const SlipGajiPage()),
-                                );
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const SlipGajiPage()));
                               } else {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SlipGajiDetailPage(user: UserInfo.loginUser!),
-                                  ),
-                                );
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => SlipGajiDetailPage(user: UserInfo.loginUser!)));
                               }
                             },
                           ),
@@ -168,7 +181,6 @@ class Sidebar extends StatelessWidget {
                         ],
                       ),
                     ),
-
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
@@ -198,6 +210,7 @@ class Sidebar extends StatelessWidget {
     required String title,
     Widget? destination,
     VoidCallback? onTap,
+    int badgeCount = 0, // Tambahan parameter badgeCount
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -208,10 +221,7 @@ class Sidebar extends StatelessWidget {
           onTap: onTap ?? () {
             if (destination != null) {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => destination),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
             }
           },
           child: Container(
@@ -236,16 +246,34 @@ class Sidebar extends StatelessWidget {
                     title,
                     style: const TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                       color: Color(0xFF192524),
                     ),
                   ),
                 ),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 12,
-                  color: Color(0xFF3C5759),
-                ),
+                // --- LOGIKA MENAMPILKAN BADGE MERAH ---
+                if (badgeCount > 0)
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Colors.redAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      "$badgeCount",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: Color(0xFF3C5759),
+                  ),
               ],
             ),
           ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart'; 
 import '../helpers/api_client.dart';
 import '../model/cuti.dart';
+import 'dart:convert'; // Untuk jsonDecode
+import 'package:http/http.dart' as http; // Untuk http.get
 
 class CutiService {
   final ApiClient _apiClient = ApiClient();
@@ -83,6 +85,21 @@ Future<Map<String, dynamic>> ubah(Cuti cuti, String id) async {
     }
   }
 
+Future<int> getPendingCount() async {
+  try {
+    // Menggunakan _apiClient agar Token Otomatis terkirim
+    final response = await _apiClient.get('cuti/count-pending');
+    
+    if (response.statusCode == 200) {
+      // Dio otomatis menghandle jsonDecode
+      return response.data['pending_count'] ?? 0;
+    }
+    return 0;
+  } catch (e) {
+    debugPrint("Error getPendingCount: $e");
+    return 0;
+  }
+}
   String _parseError(DioException e) {
     if (e.response != null && e.response!.data is Map) {
       // Mengambil ['message'] yang kita kirim dari Controller Laravel
@@ -90,4 +107,5 @@ Future<Map<String, dynamic>> ubah(Cuti cuti, String id) async {
     }
     return e.message ?? "Koneksi ke server terputus";
   }
+
 }

@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Untuk format rupiah yang rapi
+import 'package:intl/intl.dart'; 
 import '../model/user.dart';
 import '../model/slip_gaji.dart';
 import '../service/slip_gaji_service.dart';
@@ -34,7 +34,6 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
     
     List<SlipGaji> filtered = allSlip.where((s) => s.userId == widget.user.id.toString()).toList();
     
-    // Urutkan: Terbaru di atas
     filtered.sort((a, b) {
       int idA = int.tryParse(a.id.toString()) ?? 0;
       int idB = int.tryParse(b.id.toString()) ?? 0;
@@ -76,8 +75,8 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
           children: [
             const Icon(Icons.receipt_long, color: Color(0xFFD1EBDB), size: 40),
             const SizedBox(height: 10),
-            Text("Detail Slip Gaji", 
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text("Detail Slip Gaji", 
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
             Text("${slip.bulan} ${slip.tahun}", 
               style: const TextStyle(color: Colors.white70, fontSize: 14)),
           ],
@@ -126,7 +125,6 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
     );
   }
 
-  // --- DIALOG KONFIRMASI HAPUS ---
   void _konfirmasiHapus(SlipGaji slip) {
     showDialog(
       context: context,
@@ -137,19 +135,13 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
           borderRadius: BorderRadius.circular(25),
           side: const BorderSide(color: Colors.redAccent, width: 2),
         ),
-        title: Column(
+        title: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.delete_outline, color: Colors.redAccent, size: 50),
-            const SizedBox(height: 10),
-            const Text(
-              "Hapus Slip Gaji",
-              style: TextStyle(
-                color: Colors.redAccent, 
-                fontWeight: FontWeight.bold, 
-                fontSize: 18
-              ),
-            ),
+            Icon(Icons.delete_outline, color: Colors.redAccent, size: 50),
+            SizedBox(height: 10),
+            Text("Hapus Slip Gaji",
+              style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
         content: Text(
@@ -161,13 +153,11 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Tombol Batal Simpel
               TextButton(
                 onPressed: () => Navigator.pop(ctx), 
                 child: const Text("Batal", style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold))
               ),
               const SizedBox(width: 30),
-              // Tombol Hapus Simpel
               TextButton(
                 onPressed: () async {
                   Navigator.pop(ctx);
@@ -189,7 +179,6 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
     );
   }
 
-  // --- REVISI: DIALOG HASIL (SUKSES/GAGAL) DENGAN TEKS BESAR ---
   void _showResultDialog(String title, String message, bool isSuccess) {
     showDialog(
       context: context,
@@ -240,7 +229,11 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    // LOGIKA PEER REVIEW: 
+    // 1. Cek apakah saya Admin
     final isAdmin = UserInfo.role?.toLowerCase() == 'admin';
+    // 2. Cek apakah saya sedang melihat data SAYA SENDIRI
+    final isMe = UserInfo.userId == widget.user.id.toString();
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -258,7 +251,6 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
         child: SafeArea(
           child: Column(
             children: [
-              // KOLOM PENCARIAN
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: TextField(
@@ -275,8 +267,6 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
                   ),
                 ),
               ),
-
-              // LIST RIWAYAT
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
@@ -285,14 +275,15 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
                         : ListView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             itemCount: _filteredRiwayat.length,
-                            itemBuilder: (context, index) => _buildHistoryCard(_filteredRiwayat[index], isAdmin),
+                            itemBuilder: (context, index) => _buildHistoryCard(_filteredRiwayat[index], isAdmin, isMe),
                           ),
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: isAdmin
+      // Tombol Tambah HANYA muncul jika saya Admin DAN BUKAN data milik saya
+      floatingActionButton: (isAdmin && !isMe)
           ? FloatingActionButton.extended(
               backgroundColor: const Color(0xFFD1EBDB),
               onPressed: () {
@@ -306,16 +297,16 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
     );
   }
 
-  Widget _buildHistoryCard(SlipGaji slip, bool isAdmin) {
+  Widget _buildHistoryCard(SlipGaji slip, bool isAdmin, bool isMe) {
     return Card(
       color: Colors.white.withOpacity(0.05),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        onTap: () => _showRincianDialog(slip), // KLIK UNTUK MUNCULKAN POP UP DETAIL
+        onTap: () => _showRincianDialog(slip),
         title: Text("${slip.bulan} ${slip.tahun}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         subtitle: Text("Total: Rp ${_formatter.format(slip.totalGaji)}", style: const TextStyle(color: Color(0xFFD1EBDB))),
-        trailing: isAdmin
+        trailing: (isAdmin && !isMe) // Jika Admin dan bukan data milik sendiri, tampilkan Edit & Hapus
             ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

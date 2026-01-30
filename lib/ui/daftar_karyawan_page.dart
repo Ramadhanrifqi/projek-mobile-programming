@@ -64,15 +64,15 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
   Color _getLevelColor(String? level) {
     switch (level?.toLowerCase().trim()) {
       case 'lead':
-        return Colors.amberAccent; // Emas
+        return Colors.amberAccent;
       case 'senior':
-        return Colors.lightBlueAccent; // Biru
+        return Colors.lightBlueAccent;
       case 'middle':
-        return Colors.lightGreenAccent; // Hijau
+        return Colors.lightGreenAccent;
       case 'junior':
-        return Colors.orangeAccent; // Oranye
+        return Colors.orangeAccent;
       default:
-        return Colors.tealAccent; // Default
+        return Colors.tealAccent;
     }
   }
 
@@ -360,6 +360,7 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
 
   Widget _buildEmployeeCard(User user) {
     Color lvlColor = _getLevelColor(user.level);
+    bool isAdmin = user.role?.toLowerCase() == 'admin';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -384,47 +385,41 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Di dalam _buildEmployeeCard bagian Row nama:
-Row(
-  children: [
-    Flexible(
-      child: Text(
-        user.name ?? "Tanpa Nama", 
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)
-      )
-    ),
-    const SizedBox(width: 8),
-    // TAMBAHKAN LABEL ADMIN JIKA ROLE ADALAH ADMIN
-    if (user.role?.toLowerCase() == 'admin')
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Colors.redAccent.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
-        ),
-        child: const Text(
-          "ADMIN",
-          style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.bold),
-        ),
-      ),
-    const SizedBox(width: 8),
-    // Label Level (tetap ada)
-    Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: lvlColor.withOpacity(0.15), 
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: lvlColor.withOpacity(0.5), width: 0.5),
-      ),
-      child: Text(
-        user.level?.toUpperCase() ?? "-", 
-        style: TextStyle(color: lvlColor, fontSize: 9, fontWeight: FontWeight.bold),
-      ),
-    ),
-  ],
-),
+                      Row(
+                        children: [
+                          Flexible(child: Text(user.name ?? "Tanpa Nama", overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold))),
+                          const SizedBox(width: 8),
+                          // LABEL ADMIN JIKA ROLE ADALAH ADMIN
+                          if (isAdmin)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+                              ),
+                              child: const Text(
+                                "ADMIN",
+                                style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                          // Label Level
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: lvlColor.withOpacity(0.15), 
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: lvlColor.withOpacity(0.5), width: 0.5),
+                            ),
+                            child: Text(
+                              user.level?.toUpperCase() ?? "-", 
+                              style: TextStyle(color: lvlColor, fontSize: 9, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
                       Text(user.department ?? "Belum Diatur", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
                     ],
                   ),
@@ -434,8 +429,11 @@ Row(
                 _buildActionButton(Icons.edit_note, Colors.amber, () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => EditKaryawanPage(user: user))).then((_) => fetchUsers());
                 }),
-                const SizedBox(width: 8),
-                _buildActionButton(Icons.delete_outline, Colors.redAccent, () => _konfirmasiHapus(user)),
+                // LOGIKA: Sembunyikan tombol hapus jika role adalah admin
+                if (!isAdmin) ...[
+                  const SizedBox(width: 8),
+                  _buildActionButton(Icons.delete_outline, Colors.redAccent, () => _konfirmasiHapus(user)),
+                ],
               ],
             ),
           ),
