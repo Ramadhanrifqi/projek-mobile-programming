@@ -158,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ],
                             ),
-                            child: Image.asset('assets/images/images/Logo.naga.png', height: 100),
+                            child: Image.asset('assets/images/Logo.naga.png', height: 100),
                           ),
                           const SizedBox(height: 24),
                           const Text(

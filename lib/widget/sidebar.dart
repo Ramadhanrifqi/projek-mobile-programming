@@ -101,24 +101,31 @@ class _SidebarState extends State<Sidebar> {
         ),
         child: Column(
           children: [
-            UserAccountsDrawerHeader(
-              margin: EdgeInsets.zero,
-              decoration: const BoxDecoration(color: Colors.transparent),
-              accountName: Text(
-                user?.name ?? "Tidak diketahui",
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFEFECE9)),
-              ),
-              accountEmail: Text(
-                user?.role ?? "",
-                style: const TextStyle(color: Color(0xFFD0D5CE)),
-              ),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: const Color(0xFFEFECE9),
-                backgroundImage: AssetImage(
-                  'assets/images/images/${user?.name?.isNotEmpty == true ? user!.name : 'Foto.default'}.png',
-                ),
-              ),
-            ),
+      UserAccountsDrawerHeader(
+  margin: EdgeInsets.zero,
+  decoration: const BoxDecoration(color: Colors.transparent),
+  accountName: Text(
+    user?.name ?? "Tidak diketahui",
+    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFEFECE9)),
+  ),
+  accountEmail: Text(
+    user?.email ?? "",
+    style: const TextStyle(color: Color(0xFFD0D5CE)),
+  ),
+  currentAccountPicture: CircleAvatar(
+    backgroundColor: const Color(0xFFEFECE9),
+    // LOGIKA: Gunakan NetworkImage hanya jika URL valid (dimulai dengan http)
+    // Jika tidak, gunakan Logo.naga.png dari asset Flutter
+    backgroundImage: (user?.photoUrl != null && user!.photoUrl!.startsWith('http'))
+        ? NetworkImage("${user.photoUrl!}?t=${DateTime.now().millisecondsSinceEpoch}")
+        : const AssetImage('assets/images/foto_default.png') as ImageProvider,
+    
+    // Opsional: Tambahkan icon person kecil jika gambar gagal total
+    child: (user?.photoUrl == null && !user!.photoUrl!.startsWith('http'))
+        ? const Icon(Icons.person, color: Color(0xFF192524))
+        : null,
+  ),
+),
 
             Expanded(
               child: Container(
@@ -146,7 +153,6 @@ class _SidebarState extends State<Sidebar> {
                             destination: const CutiPage(),
                             badgeCount: _pendingCount, // Kirim jumlah pending ke tile
                           ),
-
                           _buildListTile(
                             context,
                             icon: Icons.money,

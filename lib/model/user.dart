@@ -2,7 +2,7 @@ class User {
   String? id;
   String? name;
   String email;
-  String? password; // Ubah jadi opsional (hapus required)
+  String? password;
   String role;
   String? phone;
   String? bio;
@@ -15,12 +15,15 @@ class User {
   String? jobType;
   String? awards;
   int? jatahCuti;
+  // --- TAMBAHKAN DUA FIELD INI ---
+  String? image;     // Nama file di server
+  String? photoUrl;  // URL lengkap untuk ditampilkan di UI
 
   User({
     this.id,
     this.name,
     required this.email,
-    this.password, // Hapus required agar bisa update tanpa ganti password
+    this.password,
     required this.role,
     this.phone,
     this.bio,
@@ -33,6 +36,8 @@ class User {
     this.jobType,
     this.awards,
     this.jatahCuti,
+    this.image,      // Tambahkan di constructor
+    this.photoUrl,   // Tambahkan di constructor
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -47,40 +52,43 @@ class User {
         department: json['department'],
         level: json['level'],
         skills: json['skills'],
-        joinDate: json['joined_at'], 
-        jobType: json['job_descriptions'], 
+        joinDate: json['joined_at'],
+        jobType: json['job_descriptions'],
         awards: json['achievements'],
         jatahCuti: json['jatah_cuti'],
+        // --- AMBIL DATA DARI JSON ---
+        image: json['image'],
+        photoUrl: json['photo_url'],
       );
 
   Map<String, dynamic> toJson() {
-  final Map<String, dynamic> data = {
-    "name": name,
-    "email": email,
-    "role": role,
-    "phone": phone,
-    "department": department,
-    "level": level,
-    "education": education,
-    "skills": skills,
-    "bio": bio,
-    "alamat": alamat,
-    "joined_at": joinDate,
-    "job_descriptions": jobType,
-    "achievements": awards,
-  };
+    final Map<String, dynamic> data = {
+      "name": name,
+      "email": email,
+      "role": role,
+      "phone": phone,
+      "department": department,
+      "level": level,
+      "education": education,
+      "skills": skills,
+      "bio": bio,
+      "alamat": alamat,
+      "joined_at": joinDate,
+      "job_descriptions": jobType,
+      "achievements": awards,
+      // Kirimkan kembali jika perlu update field lain tanpa merusak data foto
+      "image": image,
+      "photo_url": photoUrl,
+    };
 
-  // Jangan kirim jatah_cuti jika null, atau beri default 0
-  if (jatahCuti != null) {
-    data["jatah_cuti"] = jatahCuti;
+    if (jatahCuti != null) {
+      data["jatah_cuti"] = jatahCuti;
+    }
+
+    if (password != null && password!.isNotEmpty) {
+      data["password"] = password;
+    }
+    
+    return data;
   }
-
-  if (password != null && password!.isNotEmpty) {
-    data["password"] = password;
-  }
-  
-  return data;
-}
-
-
 }

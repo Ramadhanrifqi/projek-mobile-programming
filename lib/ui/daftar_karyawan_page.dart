@@ -12,13 +12,11 @@ class DaftarKaryawanPage extends StatefulWidget {
 }
 
 class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
-  List<User> _allUsers = []; // Data asli dari server
-  List<User> _filteredUsers = []; // Data hasil filter & search
+  List<User> _allUsers = [];
+  List<User> _filteredUsers = [];
   bool _isLoading = true;
   final TextEditingController _searchCtrl = TextEditingController();
-
-  // Variabel Filter Departemen
-  String _selectedDept = "All"; 
+  String _selectedDept = "All";
 
   @override
   void initState() {
@@ -30,20 +28,15 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     setState(() => _isLoading = true);
     final data = await UserService().getAllUsers();
     
-    // PERBAIKAN: Hapus filter role agar Admin tetap muncul
-    List<User> filtered = data; 
-
-    // Urutkan berdasarkan Abjad (A-Z)
-    filtered.sort((a, b) => (a.name ?? "").toLowerCase().compareTo((b.name ?? "").toLowerCase()));
+    data.sort((a, b) => (a.name ?? "").toLowerCase().compareTo((b.name ?? "").toLowerCase()));
 
     setState(() {
-      _allUsers = filtered;
-      _applyFilters(); 
+      _allUsers = data;
+      _applyFilters();
       _isLoading = false;
     });
   }
 
-  // Fungsi Filter Terpadu (Nama + Departemen)
   void _applyFilters() {
     String keyword = _searchCtrl.text.toLowerCase();
     
@@ -51,7 +44,6 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
       final nameMatch = (user.name ?? "").toLowerCase().contains(keyword);
       final deptMatch = (_selectedDept == "All") || 
                         (user.department?.toLowerCase() == _selectedDept.toLowerCase());
-      
       return nameMatch && deptMatch;
     }).toList();
 
@@ -60,7 +52,6 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     });
   }
 
-  // LOGIKA WARNA BERDASARKAN LEVEL
   Color _getLevelColor(String? level) {
     switch (level?.toLowerCase().trim()) {
       case 'lead':
@@ -76,7 +67,6 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     }
   }
 
-  // Widget Tombol Filter Departemen
   Widget _buildFilterButton(String label) {
     bool isSelected = _selectedDept == label;
     return GestureDetector(
@@ -90,7 +80,7 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFD1EBDB) : Colors.white.withOpacity(0.05),
+          color: isSelected ? const Color(0xFFD1EBDB) : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: isSelected ? const Color(0xFFD1EBDB) : Colors.white24),
         ),
@@ -104,8 +94,6 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
       ),
     );
   }
-
-  // --- DIALOGS (Success, Reset, Hapus, Detail) ---
 
   void _showResultDialog(String title, String message, bool isSuccess) {
     showDialog(
@@ -163,8 +151,8 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
               TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
-                  if (user.id != null) {
-                    bool success = await UserService().resetPassword(user.id!);
+                  if (user.id case final id?) {
+                    bool success = await UserService().resetPassword(id);
                     _showResultDialog(success ? "Berhasil" : "Gagal", 
                         success ? "Password ${user.name} telah direset" : "Gagal reset password", success);
                   }
@@ -199,8 +187,8 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
               TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
-                  if (user.id != null) {
-                    await UserService().hapusUser(user.id!);
+                  if (user.id case final id?) {
+                    await UserService().hapusUser(id);
                     _showResultDialog("Dihapus", "Data ${user.name} telah dihapus", true);
                     fetchUsers();
                   }
@@ -219,17 +207,29 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25),
-            side: const BorderSide(color: Color(0xFFD1EBDB), width: 1)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25),
+          side: const BorderSide(color: Color(0xFFD1EBDB), width: 1),
+        ),
         title: Column(
           children: [
-            CircleAvatar(radius: 40, backgroundColor: const Color(0xFFD1EBDB),
-              child: Text(user.name?.substring(0, 1).toUpperCase() ?? "U",
-                style: const TextStyle(fontSize: 30, color: Color(0xFF192524), fontWeight: FontWeight.bold))),
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: const Color(0xFFD1EBDB),
+              backgroundImage: (user.photoUrl != null && user.photoUrl!.startsWith('http'))
+                  ? NetworkImage("${user.photoUrl!}?t=${DateTime.now().millisecondsSinceEpoch}")
+                  : const AssetImage('assets/images/foto_default.png') as ImageProvider,
+            ),
             const SizedBox(height: 15),
-            Text(user.name ?? "Tanpa Nama", textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            Text(user.email, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14)),
+            Text(
+              user.name ?? "Tanpa Nama",
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              user.email ?? "-",
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 14, fontWeight: FontWeight.w400),
+            ),
           ],
         ),
         content: SizedBox(
@@ -254,8 +254,12 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
           ),
         ),
         actions: [
-          Center(child: TextButton(onPressed: () => Navigator.pop(context), 
-              child: const Text("TUTUP", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)))),
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("TUTUP", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+            ),
+          ),
         ],
       ),
     );
@@ -273,7 +277,7 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11)),
+                Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 11)),
                 Text(value ?? "-", style: const TextStyle(color: Colors.white, fontSize: 14)),
               ],
             ),
@@ -289,19 +293,24 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text("Data Karyawan", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent, elevation: 0, centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
-        width: double.infinity, height: double.infinity,
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xFF192524), Color(0xFF3C5759)],
-              begin: Alignment.topCenter, end: Alignment.bottomCenter),
+          gradient: LinearGradient(
+            colors: [Color(0xFF192524), Color(0xFF3C5759)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // --- SEARCH BAR ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: TextField(
@@ -312,13 +321,12 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                     hintText: "Cari nama karyawan...",
                     hintStyle: const TextStyle(color: Colors.white54),
                     prefixIcon: const Icon(Icons.search, color: Color(0xFFD1EBDB)),
-                    filled: true, fillColor: Colors.white.withOpacity(0.1),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.1),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
                   ),
                 ),
               ),
-
-              // --- FILTER DEPARTEMEN ---
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
@@ -326,29 +334,26 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                   children: ["All", "Produksi", "Operator", "Gudang", "HR"].map((d) => _buildFilterButton(d)).toList(),
                 ),
               ),
-              
               const SizedBox(height: 10),
-
-              // --- LIST CONTENT ---
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
                     : RefreshIndicator(
                         onRefresh: fetchUsers,
                         child: _filteredUsers.isEmpty 
-                        ? const Center(child: Text("Karyawan tidak ditemukan", style: TextStyle(color: Colors.white54)))
-                        : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          itemCount: _filteredUsers.length,
-                          itemBuilder: (context, index) {
-                            final user = _filteredUsers[index];
-                            return InkWell(
-                              onTap: () => tampilkanDetail(user),
-                              borderRadius: BorderRadius.circular(20),
-                              child: _buildEmployeeCard(user),
-                            );
-                          },
-                        ),
+                            ? const Center(child: Text("Karyawan tidak ditemukan", style: TextStyle(color: Colors.white54)))
+                            : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              itemCount: _filteredUsers.length,
+                              itemBuilder: (context, index) {
+                                final user = _filteredUsers[index];
+                                return InkWell(
+                                  onTap: () => tampilkanDetail(user),
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: _buildEmployeeCard(user),
+                                );
+                              },
+                            ),
                       ),
               ),
             ],
@@ -361,7 +366,7 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
   Widget _buildEmployeeCard(User user) {
     Color lvlColor = _getLevelColor(user.level);
     bool isAdmin = user.role?.toLowerCase() == 'admin';
-
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: ClipRRect(
@@ -371,15 +376,22 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
-                CircleAvatar(backgroundColor: const Color(0xFFD1EBDB),
-                  child: Text(user.name?.substring(0, 1).toUpperCase() ?? "U",
-                    style: const TextStyle(color: Color(0xFF192524), fontWeight: FontWeight.bold))),
+                CircleAvatar(
+                  radius: 25,
+                  backgroundColor: const Color(0xFFD1EBDB),
+                  backgroundImage: (user.photoUrl != null && user.photoUrl!.startsWith('http'))
+                      ? NetworkImage("${user.photoUrl!}?t=${DateTime.now().millisecondsSinceEpoch}")
+                      : const AssetImage('assets/images/foto_default.png') as ImageProvider,
+                  child: (user.photoUrl != null && user.photoUrl!.startsWith('http'))
+                      ? null
+                      : const SizedBox(), // Provide a default widget when the condition is false
+                ),
                 const SizedBox(width: 15),
                 Expanded(
                   child: Column(
@@ -387,49 +399,47 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                     children: [
                       Row(
                         children: [
-                          Flexible(child: Text(user.name ?? "Tanpa Nama", overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold))),
+                          Flexible(
+                            child: Text(user.name ?? "Tanpa Nama",
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
                           const SizedBox(width: 8),
-                          // LABEL ADMIN JIKA ROLE ADALAH ADMIN
                           if (isAdmin)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.redAccent.withOpacity(0.2),
+                                color: Colors.redAccent.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+                                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
                               ),
-                              child: const Text(
-                                "ADMIN",
-                                style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.bold),
-                              ),
+                              child: const Text("ADMIN",
+                                  style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.bold)),
                             ),
                           const SizedBox(width: 8),
-                          // Label Level
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: lvlColor.withOpacity(0.15), 
+                              color: lvlColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: lvlColor.withOpacity(0.5), width: 0.5),
+                              border: Border.all(color: lvlColor.withValues(alpha: 0.5), width: 0.5),
                             ),
-                            child: Text(
-                              user.level?.toUpperCase() ?? "-", 
-                              style: TextStyle(color: lvlColor, fontSize: 9, fontWeight: FontWeight.bold),
-                            ),
+                            child: Text(user.level?.toUpperCase() ?? "-",
+                                style: TextStyle(color: lvlColor, fontSize: 9, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
-                      Text(user.department ?? "Belum Diatur", style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12)),
+                      Text(user.department ?? "Belum Diatur",
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),
                     ],
                   ),
                 ),
                 _buildActionButton(Icons.lock_reset, Colors.orangeAccent, () => _konfirmasiResetPassword(user)),
                 const SizedBox(width: 8),
                 _buildActionButton(Icons.edit_note, Colors.amber, () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => EditKaryawanPage(user: user))).then((_) => fetchUsers());
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => EditKaryawanPage(user: user)))
+                      .then((_) => fetchUsers());
                 }),
-                // LOGIKA: Sembunyikan tombol hapus jika role adalah admin
                 if (!isAdmin) ...[
                   const SizedBox(width: 8),
                   _buildActionButton(Icons.delete_outline, Colors.redAccent, () => _konfirmasiHapus(user)),
@@ -447,7 +457,7 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
         child: Icon(icon, color: color, size: 20),
       ),
     );

@@ -17,6 +17,7 @@ class UserInfo {
 
   // TAMBAHKAN BARIS INI agar file lain tidak MERAH
   static String? get username => loginUser?.email; 
+  static String? get photoUrl => loginUser?.photoUrl;
 
   static void logout() {
     loginUser = null;

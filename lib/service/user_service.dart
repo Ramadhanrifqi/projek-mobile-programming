@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../helpers/api_client.dart';
 import '../model/user.dart';
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart'; // Menghilangkan merah di XFile
+import 'package:http_parser/http_parser.dart'; // Menghilangkan merah di MediaType
 
 class UserService {
   final ApiClient _apiClient = ApiClient();
@@ -89,4 +92,24 @@ class UserService {
       return false;
     }
   }
+
+  Future<Map<String, dynamic>> updateFoto(String userId, XFile imageFile) async {
+  try {
+    // Membaca file sebagai bytes agar support WEB & MOBILE
+    List<int> imageBytes = await imageFile.readAsBytes();
+
+    FormData formData = FormData.fromMap({
+      "photo": MultipartFile.fromBytes(
+        imageBytes,
+        filename: imageFile.name,
+        contentType: MediaType("image", "jpeg"), // Library http_parser
+      ),
+    });
+
+    final response = await _apiClient.post('users/$userId/update-photo', formData);
+    return {'success': true, 'photo_url': response.data['photo_url']};
+  } catch (e) {
+    return {'success': false, 'message': e.toString()};
+  }
+}
 }

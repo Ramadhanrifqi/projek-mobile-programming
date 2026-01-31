@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart'; // Tambahkan ini
 import '../widget/sidebar.dart';
 import '../service/user_service.dart';
 import '../model/user.dart';
+import '../helpers/user_info.dart';
 
 class Beranda extends StatefulWidget {
   const Beranda({super.key});
@@ -15,6 +17,8 @@ class Beranda extends StatefulWidget {
 class _BerandaState extends State<Beranda> {
   User? _userData;
   bool _isLoading = true;
+  bool _isUploading = false; // Untuk loading saat upload foto
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -38,13 +42,84 @@ class _BerandaState extends State<Beranda> {
     }
   }
 
+  // --- FUNGSI UPDATE FOTO ---
+  Future<void> _changePhoto() async {
+  final XFile? image = await _picker.pickImage(
+    source: ImageSource.gallery,
+    imageQuality: 50,
+  );
+
+  if (image != null) {
+    setState(() => _isUploading = true);
+    
+    try {
+      var result = await UserService().updateFoto(_userData!.id!, image);
+      if (result['success']) {
+        setState(() {
+          _userData!.photoUrl = result['photo_url'];
+          UserInfo.loginUser?.photoUrl = result['photo_url'];
+        });
+
+        // NOTIFIKASI BERHASIL (Sama seperti login)
+        _showNotification("Berhasil", "Foto profil Anda telah diperbarui!", const Color(0xFFD1EBDB));
+      }
+    } catch (e) {
+      // NOTIFIKASI GAGAL
+      _showNotification("Error", "Gagal mengupload: $e", Colors.redAccent);
+    } finally {
+      setState(() => _isUploading = false);
+    }
+  }
+}
+
+// FUNGSI DIALOG NOTIFIKASI (Sama seperti halaman Login)
+void _showNotification(String title, String message, Color color) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: const Color(0xFF192524),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: color, width: 2),
+      ),
+      title: Center(
+        child: Icon(
+          title == "Berhasil" ? Icons.check_circle : Icons.error_outline,
+          color: color,
+          size: 50,
+        ),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title, 
+            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18)),
+          const SizedBox(height: 10),
+          Text(message, 
+            textAlign: TextAlign.center, 
+            style: const TextStyle(color: Colors.white70)),
+        ],
+      ),
+      actions: [
+        Center(
+          child: TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
       drawer: const Sidebar(),
       appBar: AppBar(
-        title: const Text("DASHBOARD", style: TextStyle(color: Colors.white, letterSpacing: 2, fontWeight: FontWeight.w900)),
+        title: const Text("DASHBOARD", 
+          style: TextStyle(color: Colors.white, letterSpacing: 2, fontWeight: FontWeight.w900)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -75,7 +150,8 @@ class _BerandaState extends State<Beranda> {
                     const SizedBox(height: 20),
                     if (_userData?.role?.toLowerCase() == 'admin') _buildAdminActions(),
                     const SizedBox(height: 40),
-                    const Text("© 2025 PT Naga Hytam Sejahtera Abadi", style: TextStyle(color: Colors.white38, fontSize: 10)),
+                    const Text("© 2025 PT Naga Hytam Sejahtera Abadi", 
+                      style: TextStyle(color: Colors.white38, fontSize: 10)),
                   ],
                 ),
               ),
@@ -84,8 +160,8 @@ class _BerandaState extends State<Beranda> {
     );
   }
 
-  // 1. Kartu Utama (Avatar & Nama)
-  Widget _buildHeaderCard() {
+  // 1. Kartu Utama (Avatar dengan fitur Click-to-Upload)
+Widget _buildHeaderCard() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -95,20 +171,49 @@ class _BerandaState extends State<Beranda> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: const Color(0xFFD1EBDB),
-            backgroundImage: AssetImage('assets/images/images/${_userData?.email ?? 'Foto.default'}.png'),
+          // WRAPPER FOTO DENGAN FITUR GANTI FOTO
+          Stack(
+            children: [
+              CircleAvatar(
+  radius: 40,
+  // Prioritaskan NetworkImage hanya jika URL-nya lengkap (dimulai dengan http)
+  backgroundImage: (_userData?.photoUrl != null && _userData!.photoUrl!.startsWith('http'))
+      ? NetworkImage("${_userData!.photoUrl!}?t=${DateTime.now().millisecondsSinceEpoch}")
+      : const AssetImage('assets/images/foto_default.png') as ImageProvider,
+  child: _isUploading 
+      ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+      : null,
+),
+              // Tombol Kamera Kecil
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: _isUploading ? null : _changePhoto,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFD1EBDB),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.camera_alt, size: 14, color: Color(0xFF0F2027)),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_userData?.name ?? "User", style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                Text(_userData?.role?.toUpperCase() ?? "-", style: const TextStyle(color: Color(0xFFD1EBDB), letterSpacing: 1.5, fontSize: 12)),
+                Text(_userData?.name ?? "User", 
+                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                Text(_userData?.role?.toUpperCase() ?? "-", 
+                    style: const TextStyle(color: Color(0xFFD1EBDB), letterSpacing: 1.5, fontSize: 12)),
                 const SizedBox(height: 10),
-                Text(_userData?.email ?? "", style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                Text(_userData?.email ?? "", 
+                    style: const TextStyle(color: Colors.white54, fontSize: 12)),
               ],
             ),
           ),
@@ -116,8 +221,6 @@ class _BerandaState extends State<Beranda> {
       ),
     );
   }
-
-  // 2. Grid Statistik (Jatah Cuti & Department)
   Widget _buildStatsGrid() {
     return Row(
       children: [
