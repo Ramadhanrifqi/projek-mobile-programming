@@ -31,7 +31,6 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
     _fetchRiwayat();
   }
 
-  // MODIFIKASI: Menambahkan parameter isRefresh agar loading tidak menutupi layar jika ditarik
   Future<void> _fetchRiwayat({bool isRefresh = false}) async {
     if (!isRefresh) setState(() => _isLoading = true);
     
@@ -85,7 +84,9 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
                 ),
                 pw.Center(child: pw.Text("PT NAGA HYTAM SEJAHTERA ABADI", style: const pw.TextStyle(fontSize: 10))),
                 pw.SizedBox(height: 20),
-                pw.Text("Nama: ${widget.user.name}"),
+                pw.Text(
+  "Nama: ${UserInfo.userId == widget.user.id.toString() ? (UserInfo.loginUser?.name ?? widget.user.name) : widget.user.name}"
+),
                 pw.Text("Periode: ${slip.bulan} ${slip.tahun}"),
                 pw.Divider(),
                 pw.SizedBox(height: 10),
@@ -325,9 +326,23 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Riwayat Gaji ${widget.user.name}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent, elevation: 0, iconTheme: const IconThemeData(color: Colors.white),
-      ),
+  // Ganti title lama dengan ini:
+  title: ValueListenableBuilder<User?>(
+    valueListenable: UserInfo.userNotifier,
+    builder: (context, user, child) {
+      // Jika ini data saya (isMe), ambil nama dari notifier (yang refresh tiap 10 detik)
+      // Jika bukan data saya, tetap gunakan nama dari objek widget.user
+      final nameToShow = isMe ? (user?.name ?? widget.user.name) : widget.user.name;
+      return Text(
+        "Riwayat Gaji $nameToShow", 
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+      );
+    },
+  ),
+  backgroundColor: Colors.transparent, 
+  elevation: 0, 
+  iconTheme: const IconThemeData(color: Colors.white),
+),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

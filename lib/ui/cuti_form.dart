@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../model/cuti.dart';
+import '../model/user.dart'; 
 import '../service/cuti_service.dart';
 import '../helpers/user_info.dart';
 
@@ -15,7 +15,9 @@ class CutiForm extends StatefulWidget {
 class _CutiFormState extends State<CutiForm> {
   final _formKey = GlobalKey<FormState>();
   
-  final _namaLengkapCtrl = TextEditingController();
+  // Controller nama tidak lagi diisi manual di initState, 
+  // melainkan dipantau via ValueListenableBuilder
+  final _namaLengkapCtrl = TextEditingController(); 
   final _tanggalMulaiCtrl = TextEditingController();
   final _tanggalSelesaiCtrl = TextEditingController();
   final _alasanCtrl = TextEditingController();
@@ -26,15 +28,7 @@ class _CutiFormState extends State<CutiForm> {
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
     _loadExistingData();
-  }
-
-  Future<void> _loadInitialData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _namaLengkapCtrl.text = prefs.getString('name') ?? 'User';
-    });
   }
 
   Future<void> _loadExistingData() async {
@@ -46,11 +40,10 @@ class _CutiFormState extends State<CutiForm> {
     });
   }
 
-  // --- REVISI: DIALOG YANG MENUNGGU KLIK OK UNTUK PINDAH HALAMAN ---
   void _showMessageDialog(String title, String message, {bool isSuccess = false}) {
     showDialog(
       context: context,
-      barrierDismissible: false, // User wajib klik OK, tidak bisa asal klik luar
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
         shape: RoundedRectangleBorder(
@@ -91,10 +84,7 @@ class _CutiFormState extends State<CutiForm> {
           Center(
             child: TextButton(
               onPressed: () {
-                // 1. Tutup Dialog-nya dulu
                 Navigator.pop(ctx); 
-                
-                // 2. Jika ini dialog sukses, barulah tutup halaman Form-nya
                 if (isSuccess) {
                   Navigator.pop(context, true); 
                 }
@@ -157,7 +147,25 @@ class _CutiFormState extends State<CutiForm> {
                           const Text('Buat Pengajuan Baru', 
                             style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 32),
-                          _buildModernField(_namaLengkapCtrl, "Nama Pegawai", Icons.person_outline, readOnly: true),
+
+                          // REVISI KUNCI: Nama sinkron otomatis dengan notifier
+                          ValueListenableBuilder<User?>(
+                            valueListenable: UserInfo.userNotifier,
+                            builder: (context, user, child) {
+                              final currentName = user?.name ?? UserInfo.name ?? "Karyawan";
+                              // Kita update controller teks agar saat disubmit data yang terkirim adalah data terbaru
+                              _namaLengkapCtrl.text = currentName;
+                              
+                              return _buildModernField(
+                                _namaLengkapCtrl, 
+                                "Nama Pegawai", 
+                                Icons.person_outline, 
+                                readOnly: true,
+                                key: Key(currentName), // Memaksa field refresh tampilan
+                              );
+                            },
+                          ),
+
                           const SizedBox(height: 16),
                           _buildDateField(_tanggalMulaiCtrl, "Tanggal Mulai", Icons.calendar_today_outlined),
                           const SizedBox(height: 16),
@@ -194,7 +202,7 @@ class _CutiFormState extends State<CutiForm> {
             setState(() => _isSaving = true);
             
             try {
-              // 1. Validasi Pending
+              // Validasi internal tetap menggunakan data controller terbaru
               int pendingCount = _existingCuti.where((c) => c.status?.toLowerCase() == 'pending').length;
               if (pendingCount >= 2) {
                 _showMessageDialog("Peringatan", "Anda memiliki 2 pengajuan pending. Silahkan tunggu konfirmasi admin.");
@@ -205,7 +213,7 @@ class _CutiFormState extends State<CutiForm> {
               String tglMulaiStr = _tanggalMulaiCtrl.text.trim();
               String tglSelesaiStr = _tanggalSelesaiCtrl.text.trim();
 
-              // 2. Cek Bentrok
+              // Cek Bentrok
               bool isBentrok = _existingCuti.any((c) => 
                 c.tanggalMulai == tglMulaiStr || c.tanggalSelesai == tglSelesaiStr
               );
@@ -219,14 +227,14 @@ class _CutiFormState extends State<CutiForm> {
               DateTime selesai = DateTime.parse(tglSelesaiStr);
               DateTime hariIni = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
-              // 3. Validasi H-7
+              // Validasi H-7
               if (mulai.difference(hariIni).inDays < 7) {
                 _showMessageDialog("Peringatan", "Pengajuan cuti minimal harus dilakukan 7 hari sebelum tanggal mulai.");
                 setState(() => _isSaving = false);
                 return;
               }
 
-              // 4. Validasi 4 Hari
+              // Validasi 4 Hari
               int durasi = selesai.difference(mulai).inDays + 1;
               if (durasi > 4) {
                 _showMessageDialog("Peringatan", "Sekali pengajuan maksimal hanya boleh 4 hari.");
@@ -241,6 +249,7 @@ class _CutiFormState extends State<CutiForm> {
               }
 
               Map<String, dynamic> data = {
+                // Mengambil username terbaru dari helper (disinkronkan di Beranda)
                 "nama": UserInfo.username, 
                 "tanggalMulai": tglMulaiStr,
                 "tanggalSelesai": tglSelesaiStr,
@@ -252,7 +261,6 @@ class _CutiFormState extends State<CutiForm> {
 
               if (result['success']) {
                 if (!mounted) return;
-                // Panggil dialog sukses. Navigasi pop sudah ditangani di dalam fungsi ini saat klik OK.
                 _showMessageDialog("Berhasil", "Pengajuan Berhasil Dikirim!", isSuccess: true);
               } else {
                 _showMessageDialog("Gagal Mengajukan", result['message']);
@@ -296,8 +304,9 @@ class _CutiFormState extends State<CutiForm> {
     );
   }
 
-  Widget _buildModernField(TextEditingController ctrl, String label, IconData icon, {bool readOnly = false, int maxLines = 1}) {
+  Widget _buildModernField(TextEditingController ctrl, String label, IconData icon, {bool readOnly = false, int maxLines = 1, Key? key}) {
     return TextFormField(
+      key: key, // Tambahkan key agar widget refresh saat nilai berubah
       controller: ctrl, readOnly: readOnly, maxLines: maxLines, style: const TextStyle(color: Colors.white),
       decoration: _inputDecoration(label, icon),
       validator: (v) => v == null || v.isEmpty ? "$label wajib diisi" : null,

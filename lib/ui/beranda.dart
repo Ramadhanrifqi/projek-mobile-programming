@@ -32,7 +32,12 @@ class _BerandaState extends State<Beranda> {
     _loadFullProfile();
 
     // Jalankan timer refresh angka notifikasi setiap 10 detik
-    _notifTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+    _notifTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+      List<User> users = await UserService().getAllUsers();
+  final freshData = users.firstWhere((u) => u.id.toString() == UserInfo.userId);
+
+  // 2. Update secara global agar Sidebar & Beranda tahu
+  UserInfo.updateUserData(freshData);
       _refreshNotificationOnly();
     });
   }
@@ -103,6 +108,7 @@ class _BerandaState extends State<Beranda> {
           setState(() {
             _userData!.photoUrl = result['photo_url'];
           });
+          UserInfo.updateUserData(_userData!);
           _showNotification("Berhasil", "Foto profil diperbarui!", const Color(0xFFD1EBDB));
         }
       } catch (e) {

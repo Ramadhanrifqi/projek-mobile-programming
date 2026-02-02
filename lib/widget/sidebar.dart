@@ -7,7 +7,7 @@ import '../ui/slip_gaji_page.dart';
 import '../ui/slip_gaji_detail_page.dart';
 import '../ui/data_shift_page.dart';
 import '../ui/changepasswordpage.dart';
-import '../model/user.dart'; // Pastikan import model User
+import '../model/user.dart';
 
 class Sidebar extends StatefulWidget {
   const Sidebar({super.key});
@@ -17,6 +17,7 @@ class Sidebar extends StatefulWidget {
 }
 
 class _SidebarState extends State<Sidebar> {
+  
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -49,6 +50,7 @@ class _SidebarState extends State<Sidebar> {
               const SizedBox(width: 30),
               TextButton(
                 onPressed: () {
+                  UserInfo.logout(); // Pastikan panggil logout helper
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -67,8 +69,6 @@ class _SidebarState extends State<Sidebar> {
 
   @override
   Widget build(BuildContext context) {
-    final int badgeCount = UserInfo.pendingCutiCount ?? 0;
-
     return Drawer(
       child: Container(
         decoration: const BoxDecoration(
@@ -80,13 +80,11 @@ class _SidebarState extends State<Sidebar> {
         ),
         child: Column(
           children: [
-            // KUNCI PERBAIKAN: Gunakan ValueListenableBuilder untuk User Data
+            // REVISI 1: Gunakan ValueListenableBuilder untuk Foto & Nama agar sinkron saat user di-update
             ValueListenableBuilder<User?>(
               valueListenable: UserInfo.userNotifier,
               builder: (context, user, child) {
-                // Fallback ke loginUser jika notifier belum diisi
                 final activeUser = user ?? UserInfo.loginUser;
-                
                 return UserAccountsDrawerHeader(
                   margin: EdgeInsets.zero,
                   decoration: const BoxDecoration(color: Colors.transparent),
@@ -126,12 +124,17 @@ class _SidebarState extends State<Sidebar> {
                             title: "Beranda",
                             destination: const Beranda(),
                           ),
-                          _buildListTile(
-                            context,
-                            icon: Icons.calendar_today,
-                            title: "Pengajuan Cuti",
-                            destination: const CutiPage(),
-                            badgeCount: badgeCount, 
+                          ValueListenableBuilder<int>(
+                            valueListenable: ValueNotifier<int>(UserInfo.pendingCutiCount ?? 0),
+                            builder: (context, count, child) {
+                              return _buildListTile(
+                                context,
+                                icon: Icons.calendar_today,
+                                title: "Pengajuan Cuti",
+                                destination: const CutiPage(),
+                                badgeCount: UserInfo.pendingCutiCount ?? 0, 
+                              );
+                            }
                           ),
                           _buildListTile(
                             context,
@@ -170,14 +173,9 @@ class _SidebarState extends State<Sidebar> {
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
-                        "©2026 Naga Hytam Sejahtera Abadi\nAll Rights Reserved.",
+                        "©2026 Naga Hytam Sejahtera Abadi",
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF3C5759),
-                          fontStyle: FontStyle.italic,
-                          height: 1.4,
-                        ),
+                        style: TextStyle(fontSize: 11, color: Color(0xFF3C5759), fontStyle: FontStyle.italic),
                       ),
                     ),
                   ],
@@ -190,14 +188,8 @@ class _SidebarState extends State<Sidebar> {
     );
   }
 
-  Widget _buildListTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    Widget? destination,
-    VoidCallback? onTap,
-    int badgeCount = 0,
-  }) {
+  // Widget _buildListTile tetap sama seperti sebelumnya
+  Widget _buildListTile(BuildContext context, {required IconData icon, required String title, Widget? destination, VoidCallback? onTap, int badgeCount = 0}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Material(
@@ -215,50 +207,21 @@ class _SidebarState extends State<Sidebar> {
             decoration: BoxDecoration(
               color: const Color(0xFFD1EBDB),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF192524).withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2))],
             ),
             child: Row(
               children: [
                 Icon(icon, color: const Color(0xFF192524)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF192524),
-                    ),
-                  ),
-                ),
+                Expanded(child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF192524)))),
                 if (badgeCount > 0)
                   Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      "$badgeCount",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+                    child: Text("$badgeCount", style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                   )
                 else
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 12,
-                    color: Color(0xFF3C5759),
-                  ),
+                  const Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFF3C5759)),
               ],
             ),
           ),
