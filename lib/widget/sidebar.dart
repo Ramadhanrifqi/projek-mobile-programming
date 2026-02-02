@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:projek/ui/slip_gaji_detail_page.dart';
 import '../ui/beranda.dart';
 import '../ui/login.dart'; 
 import '../ui/cuti_page.dart';
 import '../helpers/user_info.dart';
 import '../ui/slip_gaji_page.dart';
+import '../ui/slip_gaji_detail_page.dart';
 import '../ui/data_shift_page.dart';
 import '../ui/changepasswordpage.dart';
-import '../service/cuti_service.dart'; // Import service cuti
 
-class Sidebar extends StatefulWidget { // Diubah ke StatefulWidget
+class Sidebar extends StatefulWidget {
   const Sidebar({super.key});
 
   @override
@@ -17,26 +16,8 @@ class Sidebar extends StatefulWidget { // Diubah ke StatefulWidget
 }
 
 class _SidebarState extends State<Sidebar> {
-  int _pendingCount = 0; // Variabel untuk menyimpan jumlah pending
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPendingCuti();
-  }
-
-  // Fungsi untuk mengambil angka pending dari server
-  void _loadPendingCuti() async {
-    // Hanya Admin yang perlu memuat angka notifikasi
-    if (UserInfo.role?.toLowerCase() == 'admin') {
-      int count = await CutiService().getPendingCount();
-      if (mounted) {
-        setState(() {
-          _pendingCount = count;
-        });
-      }
-    }
-  }
+  // Kita tidak perlu lagi _pendingCount lokal atau _loadPendingCuti() di sini
+  // karena Sidebar akan membaca UserInfo.pendingCutiCount secara instan.
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -89,6 +70,10 @@ class _SidebarState extends State<Sidebar> {
   @override
   Widget build(BuildContext context) {
     final user = UserInfo.loginUser;
+    
+    // MENGAMBIL DATA INSTAN DARI GLOBAL HELPER (Sudah dimuat oleh Beranda)
+    // Gunakan ?? 0 untuk memastikan tidak null
+    final int badgeCount = UserInfo.pendingCutiCount ?? 0;
 
     return Drawer(
       child: Container(
@@ -101,32 +86,27 @@ class _SidebarState extends State<Sidebar> {
         ),
         child: Column(
           children: [
-      UserAccountsDrawerHeader(
-  margin: EdgeInsets.zero,
-  decoration: const BoxDecoration(color: Colors.transparent),
-  accountName: Text(
-    user?.name ?? "Tidak diketahui",
-    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFEFECE9)),
-  ),
-  accountEmail: Text(
-    user?.email ?? "",
-    style: const TextStyle(color: Color(0xFFD0D5CE)),
-  ),
-  currentAccountPicture: CircleAvatar(
-    backgroundColor: const Color(0xFFEFECE9),
-    // LOGIKA: Gunakan NetworkImage hanya jika URL valid (dimulai dengan http)
-    // Jika tidak, gunakan Logo.naga.png dari asset Flutter
-    backgroundImage: (user?.photoUrl != null && user!.photoUrl!.startsWith('http'))
-        ? NetworkImage("${user.photoUrl!}?t=${DateTime.now().millisecondsSinceEpoch}")
-        : const AssetImage('assets/images/foto_default.png') as ImageProvider,
-    
-    // Opsional: Tambahkan icon person kecil jika gambar gagal total
-    child: (user?.photoUrl == null && !user!.photoUrl!.startsWith('http'))
-        ? const Icon(Icons.person, color: Color(0xFF192524))
-        : null,
-  ),
-),
-
+            UserAccountsDrawerHeader(
+              margin: EdgeInsets.zero,
+              decoration: const BoxDecoration(color: Colors.transparent),
+              accountName: Text(
+                user?.name ?? "Tidak diketahui",
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFEFECE9)),
+              ),
+              accountEmail: Text(
+                user?.email ?? "",
+                style: const TextStyle(color: Color(0xFFD0D5CE)),
+              ),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: const Color(0xFFEFECE9),
+                // OPTIMASI: Hapus DateTime agar foto profil muncul INSTAN dari cache
+                backgroundImage: (user?.photoUrl != null && 
+                                  user!.photoUrl!.isNotEmpty && 
+                                  user.photoUrl!.startsWith('http'))
+                    ? NetworkImage(user.photoUrl!)
+                    : const AssetImage('assets/images/foto_default.png') as ImageProvider,
+              ),
+            ),
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -144,14 +124,13 @@ class _SidebarState extends State<Sidebar> {
                             title: "Beranda",
                             destination: const Beranda(),
                           ),
-                          
-                          // --- MENU PENGAJUAN CUTI DENGAN BADGE ---
                           _buildListTile(
                             context,
                             icon: Icons.calendar_today,
                             title: "Pengajuan Cuti",
                             destination: const CutiPage(),
-                            badgeCount: _pendingCount, // Kirim jumlah pending ke tile
+                            // Badge count otomatis terupdate dari UserInfo
+                            badgeCount: badgeCount, 
                           ),
                           _buildListTile(
                             context,
@@ -216,7 +195,7 @@ class _SidebarState extends State<Sidebar> {
     required String title,
     Widget? destination,
     VoidCallback? onTap,
-    int badgeCount = 0, // Tambahan parameter badgeCount
+    int badgeCount = 0,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -237,7 +216,7 @@ class _SidebarState extends State<Sidebar> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF192524).withOpacity(0.1),
+                  color: const Color(0xFF192524).withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -257,7 +236,7 @@ class _SidebarState extends State<Sidebar> {
                     ),
                   ),
                 ),
-                // --- LOGIKA MENAMPILKAN BADGE MERAH ---
+                // --- BADGE NOTIFIKASI ---
                 if (badgeCount > 0)
                   Container(
                     padding: const EdgeInsets.all(6),

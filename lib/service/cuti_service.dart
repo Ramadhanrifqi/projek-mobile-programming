@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart'; 
+import 'package:dio/dio.dart';
 import '../helpers/api_client.dart';
 import '../model/cuti.dart';
-import 'dart:convert'; // Untuk jsonDecode
-import 'package:http/http.dart' as http; // Untuk http.get
 
 class CutiService {
   final ApiClient _apiClient = ApiClient();
@@ -22,45 +20,36 @@ class CutiService {
     }
   }
 
-  /// Mengirim pengajuan cuti baru ke server
   Future<Map<String, dynamic>> simpan(Map<String, dynamic> data) async {
     try {
       final response = await _apiClient.post('cuti', data);
       return {'success': true, 'data': response.data};
     } on DioException catch (e) {
-      // Menangkap error dari Laravel (422, 400, dll)
       String msg = "Terjadi kesalahan";
-      
       if (e.response != null && e.response!.data is Map) {
-        // Mengambil pesan "Anda memiliki 2 pengajuan pending" dsb
         msg = e.response!.data['message'] ?? "Gagal memproses pengajuan";
       } else {
         msg = e.message ?? "Koneksi ke server terputus";
       }
       return {'success': false, 'message': msg};
-    }catch (e) {
-  // Ini akan menampilkan pesan error asli di layar HP Anda
-  return {'success': false, 'message': "DETAIL ERROR: ${e.toString()}"};
-}
+    } catch (e) {
+      return {'success': false, 'message': "DETAIL ERROR: ${e.toString()}"};
+    }
   }
 
-Future<Map<String, dynamic>> ubah(Cuti cuti, String id) async {
-  try {
-    // Pastikan ID dikonversi ke String dan data dalam bentuk JSON
-    final response = await _apiClient.put('cuti/${id.toString()}', cuti.toJson());
-    
-    // Pastikan status code dari server adalah 200/201
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return {'success': true, 'message': 'Status berhasil diperbarui'};
+  Future<Map<String, dynamic>> ubah(Cuti cuti, String id) async {
+    try {
+      final response = await _apiClient.put('cuti/${id.toString()}', cuti.toJson());
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'message': 'Status berhasil diperbarui'};
+      }
+      return {'success': false, 'message': 'Gagal memperbarui: Status ${response.statusCode}'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': _parseError(e)};
+    } catch (e) {
+      return {'success': false, 'message': "Kesalahan Sistem: ${e.toString()}"};
     }
-    return {'success': false, 'message': 'Gagal memperbarui: Status ${response.statusCode}'};
-  } on DioException catch (e) {
-    // Ini akan menangkap pesan "Admin dilarang approve sendiri"
-    return {'success': false, 'message': _parseError(e)};
-  } catch (e) {
-    return {'success': false, 'message': "Kesalahan Sistem: ${e.toString()}"};
   }
-}
 
   Future hapus(String id) async {
     try {
@@ -85,27 +74,23 @@ Future<Map<String, dynamic>> ubah(Cuti cuti, String id) async {
     }
   }
 
-Future<int> getPendingCount() async {
-  try {
-    // Menggunakan _apiClient agar Token Otomatis terkirim
-    final response = await _apiClient.get('cuti/count-pending');
-    
-    if (response.statusCode == 200) {
-      // Dio otomatis menghandle jsonDecode
-      return response.data['pending_count'] ?? 0;
+  Future<int> getPendingCount() async {
+    try {
+      final response = await _apiClient.get('cuti/count-pending');
+      if (response.statusCode == 200) {
+        return response.data['pending_count'] ?? 0;
+      }
+      return 0;
+    } catch (e) {
+      debugPrint("Error getPendingCount: $e");
+      return 0;
     }
-    return 0;
-  } catch (e) {
-    debugPrint("Error getPendingCount: $e");
-    return 0;
   }
-}
+
   String _parseError(DioException e) {
     if (e.response != null && e.response!.data is Map) {
-      // Mengambil ['message'] yang kita kirim dari Controller Laravel
       return e.response!.data['message'] ?? "Gagal memproses data server";
     }
     return e.message ?? "Koneksi ke server terputus";
   }
-
 }

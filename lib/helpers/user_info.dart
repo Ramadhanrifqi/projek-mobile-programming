@@ -14,10 +14,9 @@ class UserInfo {
   static String? get userId => loginUser?.id?.toString();
   static String? get name => loginUser?.name;
   static String? get email => loginUser?.email;
-
-  // TAMBAHKAN BARIS INI agar file lain tidak MERAH
   static String? get username => loginUser?.email; 
   static String? get photoUrl => loginUser?.photoUrl;
+  static int? pendingCutiCount = 0; 
 
   static void logout() {
     loginUser = null;

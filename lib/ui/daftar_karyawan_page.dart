@@ -27,9 +27,7 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
   Future<void> fetchUsers() async {
     setState(() => _isLoading = true);
     final data = await UserService().getAllUsers();
-    
     data.sort((a, b) => (a.name ?? "").toLowerCase().compareTo((b.name ?? "").toLowerCase()));
-
     setState(() {
       _allUsers = data;
       _applyFilters();
@@ -39,17 +37,13 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
 
   void _applyFilters() {
     String keyword = _searchCtrl.text.toLowerCase();
-    
     List<User> results = _allUsers.where((user) {
       final nameMatch = (user.name ?? "").toLowerCase().contains(keyword);
       final deptMatch = (_selectedDept == "All") || 
                         (user.department?.toLowerCase() == _selectedDept.toLowerCase());
       return nameMatch && deptMatch;
     }).toList();
-
-    setState(() {
-      _filteredUsers = results;
-    });
+    setState(() => _filteredUsers = results);
   }
 
   Color _getLevelColor(String? level) {
@@ -106,25 +100,41 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
           side: BorderSide(color: isSuccess ? Colors.greenAccent : Colors.redAccent, width: 2),
         ),
         title: Center(
-          child: Icon(isSuccess ? Icons.check_circle : Icons.error_outline,
-              color: isSuccess ? Colors.greenAccent : Colors.redAccent, size: 50),
+          child: Icon(
+            isSuccess ? Icons.check_circle : Icons.error_outline,
+            color: isSuccess ? Colors.greenAccent : Colors.redAccent,
+            size: 50,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(title, style: TextStyle(color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
-                fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(
+              title,
+              style: TextStyle(
+                color: isSuccess ? Colors.greenAccent : Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
             const SizedBox(height: 10),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70),
+            ),
           ],
         ),
         actions: [
           Center(
             child: TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+              child: const Text(
+                "OK",
+                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold),
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -135,29 +145,46 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Colors.orangeAccent, width: 2)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Colors.orangeAccent, width: 2),
+        ),
         icon: const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 50),
-        title: const Text("Reset Password?", textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 18)),
-        content: Text("Password ${user.name} akan direset menjadi 'nagahytam123'.",
-            textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+        title: const Text(
+          "Reset Password?",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        content: Text(
+          "Password ${user.name} akan direset menjadi 'nagahytam123'.",
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white70),
+        ),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal", style: TextStyle(color: Colors.white54))),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Batal", style: TextStyle(color: Colors.white54)),
+              ),
               const SizedBox(width: 20),
               TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
                   if (user.id case final id?) {
                     bool success = await UserService().resetPassword(id);
-                    _showResultDialog(success ? "Berhasil" : "Gagal", 
-                        success ? "Password ${user.name} telah direset" : "Gagal reset password", success);
+                    _showResultDialog(
+                      success ? "Berhasil" : "Gagal",
+                      success ? "Password ${user.name} telah direset" : "Gagal reset password",
+                      success,
+                    );
                   }
                 },
-                child: const Text("Ya, Reset", style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  "Ya, Reset",
+                  style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -171,18 +198,29 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF192524),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Colors.redAccent, width: 2)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Colors.redAccent, width: 2),
+        ),
         icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 50),
-        title: const Text('Konfirmasi Hapus', textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 18)),
-        content: Text('Yakin ingin menghapus karyawan ${user.name}?', 
-            textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+        title: const Text(
+          'Konfirmasi Hapus',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        content: Text(
+          'Yakin ingin menghapus karyawan ${user.name}?',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white70),
+        ),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal", style: TextStyle(color: Colors.white54))),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Batal", style: TextStyle(color: Colors.white54)),
+              ),
               const SizedBox(width: 20),
               TextButton(
                 onPressed: () async {
@@ -193,7 +231,10 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                     fetchUsers();
                   }
                 },
-                child: const Text('Hapus', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Hapus',
+                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -257,7 +298,10 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
           Center(
             child: TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("TUTUP", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
+              child: const Text(
+                "TUTUP",
+                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],
@@ -277,7 +321,10 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 11)),
+                Text(
+                  label,
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 11),
+                ),
                 Text(value ?? "-", style: const TextStyle(color: Colors.white, fontSize: 14)),
               ],
             ),
@@ -292,7 +339,10 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Data Karyawan", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Data Karyawan",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -323,7 +373,10 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                     prefixIcon: const Icon(Icons.search, color: Color(0xFFD1EBDB)),
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.1),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
@@ -340,20 +393,25 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
                     : RefreshIndicator(
                         onRefresh: fetchUsers,
-                        child: _filteredUsers.isEmpty 
-                            ? const Center(child: Text("Karyawan tidak ditemukan", style: TextStyle(color: Colors.white54)))
+                        child: _filteredUsers.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  "Karyawan tidak ditemukan",
+                                  style: TextStyle(color: Colors.white54),
+                                ),
+                              )
                             : ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              itemCount: _filteredUsers.length,
-                              itemBuilder: (context, index) {
-                                final user = _filteredUsers[index];
-                                return InkWell(
-                                  onTap: () => tampilkanDetail(user),
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: _buildEmployeeCard(user),
-                                );
-                              },
-                            ),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                itemCount: _filteredUsers.length,
+                                itemBuilder: (context, index) {
+                                  final user = _filteredUsers[index];
+                                  return InkWell(
+                                    onTap: () => tampilkanDetail(user),
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: _buildEmployeeCard(user),
+                                  );
+                                },
+                              ),
                       ),
               ),
             ],
@@ -363,91 +421,120 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
     );
   }
 
-  Widget _buildEmployeeCard(User user) {
+ Widget _buildEmployeeCard(User user) {
     Color lvlColor = _getLevelColor(user.level);
     bool isAdmin = user.role?.toLowerCase() == 'admin';
-    
+    bool hasValidPhoto = user.photoUrl != null && user.photoUrl!.startsWith('http');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      child: ClipRRect(
+      // --- PERBAIKAN: MENGHAPUS BACKDROPFILTER UNTUK MENGURANGI LAG ---
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        // Menggunakan warna putih dengan opasitas 0.12 agar tetap terlihat elegan
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-            ),
-            child: Row(
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: const Color(0xFFD1EBDB),
+            backgroundImage: hasValidPhoto
+                ? NetworkImage(user.photoUrl!) // Tanpa parameter waktu agar caching bekerja
+                : const AssetImage('assets/images/foto_default.png') as ImageProvider,
+            child: null, // Child null agar tidak ada tumpukan teks
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 25,
-                  backgroundColor: const Color(0xFFD1EBDB),
-                  backgroundImage: (user.photoUrl != null && user.photoUrl!.startsWith('http'))
-                      ? NetworkImage("${user.photoUrl!}?t=${DateTime.now().millisecondsSinceEpoch}")
-                      : const AssetImage('assets/images/foto_default.png') as ImageProvider,
-                  child: (user.photoUrl != null && user.photoUrl!.startsWith('http'))
-                      ? null
-                      : const SizedBox(), // Provide a default widget when the condition is false
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(user.name ?? "Tanpa Nama",
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                          ),
-                          const SizedBox(width: 8),
-                          if (isAdmin)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
-                              ),
-                              child: const Text("ADMIN",
-                                  style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.bold)),
-                            ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: lvlColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: lvlColor.withValues(alpha: 0.5), width: 0.5),
-                            ),
-                            child: Text(user.level?.toUpperCase() ?? "-",
-                                style: TextStyle(color: lvlColor, fontSize: 9, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        user.name ?? "Tanpa Nama",
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      Text(user.department ?? "Belum Diatur",
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12)),
-                    ],
+                    ),
+                    const SizedBox(width: 8),
+                    if (isAdmin)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+                        ),
+                        child: const Text(
+                          "ADMIN",
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: lvlColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: lvlColor.withValues(alpha: 0.5),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Text(
+                        user.level?.toUpperCase() ?? "-",
+                        style: TextStyle(
+                          color: lvlColor,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  user.department ?? "Belum Diatur",
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 12,
                   ),
                 ),
-                _buildActionButton(Icons.lock_reset, Colors.orangeAccent, () => _konfirmasiResetPassword(user)),
-                const SizedBox(width: 8),
-                _buildActionButton(Icons.edit_note, Colors.amber, () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => EditKaryawanPage(user: user)))
-                      .then((_) => fetchUsers());
-                }),
-                if (!isAdmin) ...[
-                  const SizedBox(width: 8),
-                  _buildActionButton(Icons.delete_outline, Colors.redAccent, () => _konfirmasiHapus(user)),
-                ],
               ],
             ),
           ),
-        ),
+          // Tombol Aksi tetap dipertahankan
+          _buildActionButton(Icons.lock_reset, Colors.orangeAccent, () => _konfirmasiResetPassword(user)),
+          const SizedBox(width: 8),
+          _buildActionButton(Icons.edit_note, Colors.amber, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => EditKaryawanPage(user: user)),
+            ).then((_) => fetchUsers());
+          }),
+          if (!isAdmin) ...[
+            const SizedBox(width: 8),
+            _buildActionButton(Icons.delete_outline, Colors.redAccent, () => _konfirmasiHapus(user)),
+          ],
+        ],
       ),
     );
   }
@@ -457,7 +544,10 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+        ),
         child: Icon(icon, color: color, size: 20),
       ),
     );
