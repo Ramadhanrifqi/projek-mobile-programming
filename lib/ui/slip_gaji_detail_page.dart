@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; 
+import 'package:printing/printing.dart'; 
+import 'package:pdf/pdf.dart'; 
+import 'package:pdf/widgets.dart' as pw; 
 import '../model/user.dart';
 import '../model/slip_gaji.dart';
 import '../service/slip_gaji_service.dart';
@@ -28,9 +31,11 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
     _fetchRiwayat();
   }
 
-  Future<void> _fetchRiwayat() async {
-    setState(() => _isLoading = true);
-    final allSlip = await SlipGajiService().getAllSlip();
+  // MODIFIKASI: Menambahkan parameter isRefresh agar loading tidak menutupi layar jika ditarik
+  Future<void> _fetchRiwayat({bool isRefresh = false}) async {
+    if (!isRefresh) setState(() => _isLoading = true);
+    
+    final allSlip = await SlipGajiService().getAllSlip(); 
     
     List<SlipGaji> filtered = allSlip.where((s) => s.userId == widget.user.id.toString()).toList();
     
@@ -40,11 +45,13 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
       return idB.compareTo(idA); 
     });
 
-    setState(() {
-      _allRiwayat = filtered;
-      _filteredRiwayat = filtered;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _allRiwayat = filtered;
+        _filteredRiwayat = filtered;
+        _isLoading = false;
+      });
+    }
   }
 
   void _runFilter(String keyword) {
@@ -61,7 +68,70 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
     setState(() => _filteredRiwayat = results);
   }
 
-  // --- POP UP DETAIL SELURUH GAJI ---
+  Future<void> _generatePdf(SlipGaji slip) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a5,
+        build: (pw.Context context) {
+          return pw.Padding(
+            padding: const pw.EdgeInsets.all(20),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Center(
+                  child: pw.Text("SLIP GAJI KARYAWAN", style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                ),
+                pw.Center(child: pw.Text("PT NAGA HYTAM SEJAHTERA ABADI", style: const pw.TextStyle(fontSize: 10))),
+                pw.SizedBox(height: 20),
+                pw.Text("Nama: ${widget.user.name}"),
+                pw.Text("Periode: ${slip.bulan} ${slip.tahun}"),
+                pw.Divider(),
+                pw.SizedBox(height: 10),
+                _pdfRow("Gaji Pokok", slip.gajiPokok),
+                _pdfRow("Tunjangan Transport", slip.tunjanganTransport),
+                _pdfRow("Tunjangan Makan", slip.tunjanganMakan),
+                pw.SizedBox(height: 5),
+                _pdfRow("PPh 21 (5%)", slip.potonganPph21, isMinus: true),
+                _pdfRow("BPJS Kesehatan (1%)", slip.potonganBpjsKes, isMinus: true),
+                _pdfRow("BPJS Ketenagakerjaan (2%)", slip.potonganBpjsTk, isMinus: true),
+                pw.Divider(),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text("TOTAL GAJI BERSIH", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.Text("Rp ${_formatter.format(slip.totalGaji)}", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  ],
+                ),
+                pw.SizedBox(height: 40),
+                pw.Align(
+                  alignment: pw.Alignment.centerRight,
+                  child: pw.Text("TTD Management", style: const pw.TextStyle(fontSize: 8)),
+                )
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
+  }
+
+  pw.Widget _pdfRow(String label, dynamic value, {bool isMinus = false}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label, style: const pw.TextStyle(fontSize: 10)),
+          pw.Text("${isMinus ? '- ' : ''}Rp ${_formatter.format(value ?? 0)}", style: const pw.TextStyle(fontSize: 10)),
+        ],
+      ),
+    );
+  }
+
   void _showRincianDialog(SlipGaji slip) {
     showDialog(
       context: context,
@@ -81,24 +151,44 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
               style: const TextStyle(color: Colors.white70, fontSize: 14)),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Divider(color: Colors.white24),
-            _rowDetail("Gaji Pokok", slip.gajiPokok),
-            _rowDetail("Tunjangan", slip.tunjangan),
-            _rowDetail("Potongan", slip.potongan, isMinus: true),
-            const Divider(color: Colors.white24, thickness: 1),
-            _rowDetail("Total Bersih", slip.totalGaji, isTotal: true),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Divider(color: Colors.white24),
+              _rowDetail("Gaji Pokok", slip.gajiPokok),
+              _rowDetail("Tunj. Transport", slip.tunjanganTransport),
+              _rowDetail("Tunj. Makan", slip.tunjanganMakan),
+              const Divider(color: Colors.white10),
+              _rowDetail("PPh 21 (5%)", slip.potonganPph21, isMinus: true),
+              _rowDetail("BPJS Kes (1%)", slip.potonganBpjsKes, isMinus: true),
+              _rowDetail("BPJS TK (2%)", slip.potonganBpjsTk, isMinus: true),
+              const Divider(color: Colors.white24, thickness: 1),
+              _rowDetail("Total Bersih", slip.totalGaji, isTotal: true),
+            ],
+          ),
         ),
         actions: [
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("TUTUP", 
-                style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold)),
-            ),
+          Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _generatePdf(slip),
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text("CETAK PDF"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD1EBDB),
+                    foregroundColor: const Color(0xFF192524),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("TUTUP", 
+                  style: TextStyle(color: Colors.white54, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ],
       ),
@@ -107,17 +197,17 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
 
   Widget _rowDetail(String label, dynamic value, {bool isMinus = false, bool isTotal = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 15)),
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13)),
           Text(
             "${isMinus ? '- ' : ''}Rp ${_formatter.format(int.tryParse(value.toString()) ?? 0)}",
             style: TextStyle(
               color: isTotal ? const Color(0xFFD1EBDB) : (isMinus ? Colors.redAccent : Colors.white),
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              fontSize: isTotal ? 16 : 15,
+              fontSize: isTotal ? 15 : 13,
             ),
           ),
         ],
@@ -229,10 +319,7 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    // LOGIKA PEER REVIEW: 
-    // 1. Cek apakah saya Admin
     final isAdmin = UserInfo.role?.toLowerCase() == 'admin';
-    // 2. Cek apakah saya sedang melihat data SAYA SENDIRI
     final isMe = UserInfo.userId == widget.user.id.toString();
 
     return Scaffold(
@@ -270,19 +357,29 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
-                    : _filteredRiwayat.isEmpty
-                        ? const Center(child: Text("Data tidak ditemukan.", style: TextStyle(color: Colors.white60)))
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            itemCount: _filteredRiwayat.length,
-                            itemBuilder: (context, index) => _buildHistoryCard(_filteredRiwayat[index], isAdmin, isMe),
-                          ),
+                    : RefreshIndicator(
+                        // FITUR REFRESH: Memanggil kembali fungsi fetch data
+                        onRefresh: () => _fetchRiwayat(isRefresh: true),
+                        color: const Color(0xFF192524),
+                        backgroundColor: const Color(0xFFD1EBDB),
+                        child: _filteredRiwayat.isEmpty
+                            ? ListView( // Gunakan ListView agar area bisa ditarik meski kosong
+                                children: const [
+                                  SizedBox(height: 200),
+                                  Center(child: Text("Data tidak ditemukan.", style: TextStyle(color: Colors.white60))),
+                                ],
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                itemCount: _filteredRiwayat.length,
+                                itemBuilder: (context, index) => _buildHistoryCard(_filteredRiwayat[index], isAdmin, isMe),
+                              ),
+                      ),
               ),
             ],
           ),
         ),
       ),
-      // Tombol Tambah HANYA muncul jika saya Admin DAN BUKAN data milik saya
       floatingActionButton: (isAdmin && !isMe)
           ? FloatingActionButton.extended(
               backgroundColor: const Color(0xFFD1EBDB),
@@ -305,8 +402,8 @@ class _SlipGajiDetailPageState extends State<SlipGajiDetailPage> {
       child: ListTile(
         onTap: () => _showRincianDialog(slip),
         title: Text("${slip.bulan} ${slip.tahun}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        subtitle: Text("Total: Rp ${_formatter.format(slip.totalGaji)}", style: const TextStyle(color: Color(0xFFD1EBDB))),
-        trailing: (isAdmin && !isMe) // Jika Admin dan bukan data milik sendiri, tampilkan Edit & Hapus
+        subtitle: Text("Total Bersih: Rp ${_formatter.format(slip.totalGaji)}", style: const TextStyle(color: Color(0xFFD1EBDB))),
+        trailing: (isAdmin && !isMe)
             ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

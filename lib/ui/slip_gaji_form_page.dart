@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../model/slip_gaji.dart';
 import '../model/user.dart';
 import '../service/slip_gaji_service.dart';
-import '../service/user_service.dart';
 
 class SlipGajiFormPage extends StatefulWidget {
   final SlipGaji? slip;
@@ -19,15 +18,16 @@ class SlipGajiFormPage extends StatefulWidget {
 
 class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
   bool _isSaving = false;
 
+  // Controllers
   final _gajiPokokCtrl = TextEditingController();
-  final _tunjanganCtrl = TextEditingController();
-  final _potonganCtrl = TextEditingController();
+  final _tunjTransportCtrl = TextEditingController();
+  final _tunjMakanCtrl = TextEditingController();
+  final _pph21Ctrl = TextEditingController();
+  final _bpjsKesCtrl = TextEditingController();
+  final _bpjsTkCtrl = TextEditingController();
   final _totalGajiCtrl = TextEditingController();
-  
-  // Controller baru untuk Nama Karyawan agar tidak menggunakan dropdown
   final _namaKaryawanCtrl = TextEditingController();
 
   String? _selectedUserId;
@@ -54,10 +54,10 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
       _namaKaryawanCtrl.text = widget.targetUser?.name ?? "Karyawan";
       _selectedBulan = widget.slip!.bulan;
       _selectedTahun = widget.slip!.tahun;
-      _gajiPokokCtrl.text = _formatter.format(widget.slip!.gajiPokok);
-      _tunjanganCtrl.text = _formatter.format(widget.slip!.tunjangan);
-      _potonganCtrl.text = _formatter.format(widget.slip!.potongan);
-      _hitungTotal();
+      _gajiPokokCtrl.text = _formatter.format(widget.slip!.gajiPokok ?? 0);
+      _tunjTransportCtrl.text = _formatter.format(widget.slip!.tunjanganTransport ?? 0);
+      _tunjMakanCtrl.text = _formatter.format(widget.slip!.tunjanganMakan ?? 0);
+      _hitungOtomatis();
     } else {
       // MODE TAMBAH
       _selectedUserId = widget.targetUser?.id.toString();
@@ -66,14 +66,30 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
     }
   }
 
-  int _parseRaw(String val) => int.tryParse(val.replaceAll('.', '')) ?? 0;
+  int _parseRaw(String val) {
+    if (val.isEmpty) return 0; // Kembalikan 0 jika input kosong
+    return int.tryParse(val.replaceAll('.', '')) ?? 0;
+  }
 
-  void _hitungTotal() {
+  void _hitungOtomatis() {
     int gapok = _parseRaw(_gajiPokokCtrl.text);
-    int tunjangan = _parseRaw(_tunjanganCtrl.text);
-    int potongan = _parseRaw(_potonganCtrl.text);
-    int total = (gapok + tunjangan) - potongan;
-    _totalGajiCtrl.text = _formatter.format(total);
+    int transport = _parseRaw(_tunjTransportCtrl.text);
+    int makan = _parseRaw(_tunjMakanCtrl.text);
+
+    int bruto = gapok + transport + makan;
+
+    // Perhitungan Potongan Sesuai Aturan PT Naga Hytam
+    int bpjsKes = (bruto * 0.01).round();
+    int bpjsTk = (bruto * 0.02).round();
+    int pph21 = (bruto > 4500000) ? (bruto * 0.05).round() : 0;
+
+    int totalPotongan = bpjsKes + bpjsTk + pph21;
+    int netto = bruto - totalPotongan;
+
+    _bpjsKesCtrl.text = _formatter.format(bpjsKes);
+    _bpjsTkCtrl.text = _formatter.format(bpjsTk);
+    _pph21Ctrl.text = _formatter.format(pph21);
+    _totalGajiCtrl.text = _formatter.format(netto);
   }
 
   @override
@@ -83,7 +99,7 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(isEdit ? "Edit Nominal Gaji" : "Buat Slip Gaji", 
+        title: Text(isEdit ? "Edit Slip Gaji" : "Buat Slip Gaji", 
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0, centerTitle: true, iconTheme: const IconThemeData(color: Colors.white),
@@ -120,12 +136,11 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
           child: Form(
             key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // SEKARANG MENGGUNAKAN FIELD BIASA (BUKAN DROPDOWN) AGAR TIDAK BISA DIUBAH
                 _buildReadOnlyField(_namaKaryawanCtrl, "Karyawan", Icons.person),
                 const SizedBox(height: 16),
                 
-                // BULAN & TAHUN: Putih Tebal (ReadOnly jika Edit, Dropdown jika Baru)
                 isEdit 
                   ? _buildReadOnlyField(TextEditingController(text: _selectedBulan), "Bulan", Icons.date_range)
                   : _buildDropdownBulan(),
@@ -136,19 +151,31 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
                   : _buildDropdownTahun(),
                 
                 const Divider(color: Colors.white24, height: 40),
+                const Text("PENDAPATAN", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(height: 10),
                 
-                // NOMINAL GAJI
-                _buildCurrencyField(_gajiPokokCtrl, "Gaji Pokok", Icons.money),
+                _buildCurrencyField(_gajiPokokCtrl, "Gaji Pokok", Icons.money, isRequired: true),
                 const SizedBox(height: 16),
-                _buildCurrencyField(_tunjanganCtrl, "Tunjangan", Icons.add_circle_outline),
+                _buildCurrencyField(_tunjTransportCtrl, "Tunjangan Transport (Opsional)", Icons.directions_bus),
                 const SizedBox(height: 16),
-                _buildCurrencyField(_potonganCtrl, "Potongan", Icons.remove_circle_outline),
-                const SizedBox(height: 16),
-                _buildField(_totalGajiCtrl, "Total Gaji Bersih", Icons.account_balance_wallet, readOnly: true),
+                _buildCurrencyField(_tunjMakanCtrl, "Tunjangan Makan (Opsional)", Icons.restaurant),
+                
+                const Divider(color: Colors.white24, height: 40),
+                const Text("POTONGAN OTOMATIS", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(height: 10),
+
+                _buildReadOnlyField(_pph21Ctrl, "PPh 21 (5% jika > 4.5jt)", Icons.account_balance),
+                const SizedBox(height: 12),
+                _buildReadOnlyField(_bpjsKesCtrl, "BPJS Kesehatan (1%)", Icons.health_and_safety),
+                const SizedBox(height: 12),
+                _buildReadOnlyField(_bpjsTkCtrl, "BPJS Ketenagakerjaan (2%)", Icons.work_history),
+                
+                const Divider(color: Colors.white24, height: 40),
+                _buildField(_totalGajiCtrl, "Total Gaji Bersih (Netto)", Icons.account_balance_wallet, readOnly: true),
                 const SizedBox(height: 32),
                 
                 _isSaving 
-                  ? const CircularProgressIndicator(color: Color(0xFFD1EBDB))
+                  ? const Center(child: CircularProgressIndicator(color: Color(0xFFD1EBDB)))
                   : _buildSubmitButton(isEdit),
               ],
             ),
@@ -158,15 +185,12 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
     );
   }
 
-  // WIDGET UNTUK TAMPILAN PUTIH TEBAL & TIDAK BISA DIEDIT (UNTUK KARYAWAN/BULAN/TAHUN SAAT EDIT)
   Widget _buildReadOnlyField(TextEditingController ctrl, String label, IconData icon) {
     return TextFormField(
       controller: ctrl,
       readOnly: true,
-      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-      decoration: _inputDecoration(label, icon, false).copyWith(
-        fillColor: Colors.black.withOpacity(0.3), // Latar lebih gelap agar teks putih menonjol
-      ),
+      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+      decoration: _inputDecoration(label, icon, false),
     );
   }
 
@@ -194,7 +218,7 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
     );
   }
 
-  Widget _buildCurrencyField(TextEditingController ctrl, String label, IconData icon) {
+  Widget _buildCurrencyField(TextEditingController ctrl, String label, IconData icon, {bool isRequired = false}) {
     return TextFormField(
       controller: ctrl,
       keyboardType: TextInputType.number,
@@ -209,9 +233,10 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
             selection: TextSelection.collapsed(offset: formatted.length),
           );
         }
-        _hitungTotal();
+        _hitungOtomatis();
       },
-      validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
+      // Tunjangan kini opsional, hanya Gaji Pokok yang dicek isNotEmpty
+      validator: (v) => (isRequired && (v == null || v.isEmpty)) ? "Wajib diisi" : null,
     );
   }
 
@@ -219,18 +244,18 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
     return TextFormField(
       controller: ctrl,
       readOnly: readOnly,
-      style: TextStyle(color: readOnly ? const Color(0xFFD1EBDB) : Colors.white, fontWeight: FontWeight.bold),
+      style: TextStyle(color: readOnly ? const Color(0xFFD1EBDB) : Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
       decoration: _inputDecoration(label, icon, !readOnly),
     );
   }
 
   InputDecoration _inputDecoration(String label, IconData icon, bool enabled) {
     return InputDecoration(
-      labelText: label, labelStyle: const TextStyle(color: Colors.white70),
+      labelText: label, labelStyle: const TextStyle(color: Colors.white70, fontSize: 12),
       prefixIcon: Icon(icon, color: const Color(0xFFD1EBDB), size: 20),
       filled: true, 
       fillColor: enabled ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.2),
-      disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.white.withOpacity(0.2))),
+      disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFD1EBDB))),
     );
@@ -250,8 +275,8 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
               bulan: _selectedBulan,
               tahun: _selectedTahun,
               gajiPokok: _parseRaw(_gajiPokokCtrl.text),
-              tunjangan: _parseRaw(_tunjanganCtrl.text),
-              potongan: _parseRaw(_potonganCtrl.text),
+              tunjanganTransport: _parseRaw(_tunjTransportCtrl.text),
+              tunjanganMakan: _parseRaw(_tunjMakanCtrl.text),
               totalGaji: _parseRaw(_totalGajiCtrl.text),
             );
 
@@ -261,16 +286,16 @@ class _SlipGajiFormPageState extends State<SlipGajiFormPage> {
 
             setState(() => _isSaving = false);
             _showResultDialog(success ? "Berhasil" : "Gagal", 
-              success ? "Data berhasil disimpan" : "Terjadi kesalahan server", success);
+              success ? "Data slip gaji berhasil disimpan" : "Terjadi kesalahan server", success);
           }
         },
-        child: Text(isEdit ? "UPDATE NOMINAL" : "SIMPAN SLIP GAJI", 
+        child: Text(isEdit ? "UPDATE SLIP GAJI" : "SIMPAN SLIP GAJI", 
           style: const TextStyle(color: Color(0xFF192524), fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-void _showResultDialog(String title, String message, bool isSuccess) {
+  void _showResultDialog(String title, String message, bool isSuccess) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -278,56 +303,25 @@ void _showResultDialog(String title, String message, bool isSuccess) {
         backgroundColor: const Color(0xFF192524),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(25),
-          side: BorderSide(
-            color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
-            width: 2,
-          ),
+          side: BorderSide(color: isSuccess ? Colors.greenAccent : Colors.redAccent, width: 2),
         ),
-        // --- REVISI BAGIAN TITLE: IKON + TEKS BESAR ---
         title: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Center(
-              child: Icon(
-                isSuccess ? Icons.check_circle : Icons.error_outline, 
-                color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
-                size: 50,
-              ),
-            ),
+            Icon(isSuccess ? Icons.check_circle : Icons.error_outline, 
+              color: isSuccess ? Colors.greenAccent : Colors.redAccent, size: 50),
             const SizedBox(height: 10),
-            Text(
-              isSuccess ? "Berhasil" : "Gagal", 
-              style: TextStyle(
-                color: isSuccess ? Colors.greenAccent : Colors.redAccent, 
-                fontWeight: FontWeight.bold, 
-                fontSize: 18, // Ukuran teks besar sesuai permintaan
-              ),
-            ),
+            Text(title, style: TextStyle(color: isSuccess ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold)),
           ],
         ),
-        // --- BAGIAN KONTEN (PESAN) ---
-        content: Text(
-          message, 
-          textAlign: TextAlign.center, 
-          style: const TextStyle(color: Colors.white70, fontSize: 16),
-        ),
+        content: Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
         actions: [
           Center(
             child: TextButton(
               onPressed: () {
-                Navigator.pop(ctx); // Tutup dialog
-                if (isSuccess) {
-                  Navigator.pop(context, true); // Kembali ke halaman sebelumnya jika sukses
-                }
+                Navigator.pop(ctx);
+                if (isSuccess) Navigator.pop(context, true);
               },
-              child: Text(
-                "OK", 
-                style: TextStyle(
-                  color: isSuccess ? const Color(0xFFD1EBDB) : Colors.redAccent, 
-                  fontWeight: FontWeight.bold, 
-                  fontSize: 18,
-                ),
-              ),
+              child: const Text("OK", style: TextStyle(color: Color(0xFFD1EBDB), fontWeight: FontWeight.bold, fontSize: 18)),
             ),
           )
         ],

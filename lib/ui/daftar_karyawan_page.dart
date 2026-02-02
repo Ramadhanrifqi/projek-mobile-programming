@@ -268,7 +268,7 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
               style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Text(
-              user.email ?? "-",
+              user.email,
               style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 14, fontWeight: FontWeight.w400),
             ),
           ],
@@ -423,7 +423,7 @@ class _DaftarKaryawanPageState extends State<DaftarKaryawanPage> {
 
  Widget _buildEmployeeCard(User user) {
     Color lvlColor = _getLevelColor(user.level);
-    bool isAdmin = user.role?.toLowerCase() == 'admin';
+    bool isAdmin = user.role.toLowerCase() == 'admin';
     bool hasValidPhoto = user.photoUrl != null && user.photoUrl!.startsWith('http');
 
     return Container(

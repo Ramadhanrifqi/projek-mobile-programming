@@ -7,6 +7,7 @@ import '../ui/slip_gaji_page.dart';
 import '../ui/slip_gaji_detail_page.dart';
 import '../ui/data_shift_page.dart';
 import '../ui/changepasswordpage.dart';
+import '../model/user.dart'; // Pastikan import model User
 
 class Sidebar extends StatefulWidget {
   const Sidebar({super.key});
@@ -16,9 +17,6 @@ class Sidebar extends StatefulWidget {
 }
 
 class _SidebarState extends State<Sidebar> {
-  // Kita tidak perlu lagi _pendingCount lokal atau _loadPendingCuti() di sini
-  // karena Sidebar akan membaca UserInfo.pendingCutiCount secara instan.
-
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -69,10 +67,6 @@ class _SidebarState extends State<Sidebar> {
 
   @override
   Widget build(BuildContext context) {
-    final user = UserInfo.loginUser;
-    
-    // MENGAMBIL DATA INSTAN DARI GLOBAL HELPER (Sudah dimuat oleh Beranda)
-    // Gunakan ?? 0 untuk memastikan tidak null
     final int badgeCount = UserInfo.pendingCutiCount ?? 0;
 
     return Drawer(
@@ -86,26 +80,34 @@ class _SidebarState extends State<Sidebar> {
         ),
         child: Column(
           children: [
-            UserAccountsDrawerHeader(
-              margin: EdgeInsets.zero,
-              decoration: const BoxDecoration(color: Colors.transparent),
-              accountName: Text(
-                user?.name ?? "Tidak diketahui",
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFEFECE9)),
-              ),
-              accountEmail: Text(
-                user?.email ?? "",
-                style: const TextStyle(color: Color(0xFFD0D5CE)),
-              ),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: const Color(0xFFEFECE9),
-                // OPTIMASI: Hapus DateTime agar foto profil muncul INSTAN dari cache
-                backgroundImage: (user?.photoUrl != null && 
-                                  user!.photoUrl!.isNotEmpty && 
-                                  user.photoUrl!.startsWith('http'))
-                    ? NetworkImage(user.photoUrl!)
-                    : const AssetImage('assets/images/foto_default.png') as ImageProvider,
-              ),
+            // KUNCI PERBAIKAN: Gunakan ValueListenableBuilder untuk User Data
+            ValueListenableBuilder<User?>(
+              valueListenable: UserInfo.userNotifier,
+              builder: (context, user, child) {
+                // Fallback ke loginUser jika notifier belum diisi
+                final activeUser = user ?? UserInfo.loginUser;
+                
+                return UserAccountsDrawerHeader(
+                  margin: EdgeInsets.zero,
+                  decoration: const BoxDecoration(color: Colors.transparent),
+                  accountName: Text(
+                    activeUser?.name ?? "Tidak diketahui",
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFEFECE9)),
+                  ),
+                  accountEmail: Text(
+                    activeUser?.email ?? "",
+                    style: const TextStyle(color: Color(0xFFD0D5CE)),
+                  ),
+                  currentAccountPicture: CircleAvatar(
+                    backgroundColor: const Color(0xFFEFECE9),
+                    backgroundImage: (activeUser?.photoUrl != null && 
+                                      activeUser!.photoUrl!.isNotEmpty && 
+                                      activeUser.photoUrl!.startsWith('http'))
+                        ? NetworkImage(activeUser.photoUrl!)
+                        : const AssetImage('assets/images/foto_default.png') as ImageProvider,
+                  ),
+                );
+              },
             ),
             Expanded(
               child: Container(
@@ -129,7 +131,6 @@ class _SidebarState extends State<Sidebar> {
                             icon: Icons.calendar_today,
                             title: "Pengajuan Cuti",
                             destination: const CutiPage(),
-                            // Badge count otomatis terupdate dari UserInfo
                             badgeCount: badgeCount, 
                           ),
                           _buildListTile(
@@ -169,7 +170,7 @@ class _SidebarState extends State<Sidebar> {
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Text(
-                        "©2025 Naga Hytam Sejahtera Abadi\nAll Rights Reserved.",
+                        "©2026 Naga Hytam Sejahtera Abadi\nAll Rights Reserved.",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 11,
@@ -236,7 +237,6 @@ class _SidebarState extends State<Sidebar> {
                     ),
                   ),
                 ),
-                // --- BADGE NOTIFIKASI ---
                 if (badgeCount > 0)
                   Container(
                     padding: const EdgeInsets.all(6),

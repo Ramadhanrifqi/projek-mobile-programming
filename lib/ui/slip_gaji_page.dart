@@ -52,9 +52,9 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
 
       bool roleMatch = true;
       if (_selectedRoleFilter == "Admin") {
-        roleMatch = user.role?.toLowerCase() == 'admin';
+        roleMatch = user.role.toLowerCase() == 'admin';
       } else if (_selectedRoleFilter == "User") {
-        roleMatch = user.role?.toLowerCase() == 'user';
+        roleMatch = user.role.toLowerCase() == 'user';
       }
 
       return nameMatch && roleMatch;
@@ -194,7 +194,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
   }
 
   Widget _buildKaryawanCard(User user) {
-    bool isAdminAccount = user.role?.toLowerCase() == 'admin';
+    bool isAdminAccount = user.role.toLowerCase() == 'admin';
     bool isMe = user.id.toString() == UserInfo.userId;
 
     return Container(
@@ -210,7 +210,7 @@ class _SlipGajiPageState extends State<SlipGajiPage> {
         leading: _buildAvatar(user),
         title: _buildTitle(user, isAdminAccount, isMe),
         subtitle: Text(
-          user.email ?? "",
+          user.email,
           style: const TextStyle(color: Colors.white70),
         ),
         trailing: const Icon(Icons.arrow_forward_ios,
